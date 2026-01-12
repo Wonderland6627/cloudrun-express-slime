@@ -122,6 +122,28 @@ curl -X POST https://your-service-xxx.tcb.qcloud.la/api/minigame/getUserGameInfo
 - 检查环境变量是否配置正确
 - 查看部署日志，找到具体错误信息
 
+### 1.1. 健康检查失败（Readiness probe failed / Liveness probe failed）
+
+**错误信息**：
+```
+Readiness probe failed: dial tcp 10.30.2.12:80: connect: connection refused
+Liveness probe failed: dial tcp 10.30.2.12:80: connect: connection refused
+```
+
+**原因**：
+- 腾讯云托管默认使用端口 80 进行健康检查
+- Express 服务默认监听端口 3000
+- 端口不匹配导致健康检查失败
+
+**解决方案**：
+- ✅ **已修复**：Dockerfile 中已设置 `ENV PORT=80`，服务会自动监听 80 端口
+- 如果使用 Git 部署，确保 Dockerfile 已更新并提交到仓库
+- 如果使用本地代码部署，确保使用最新的 Dockerfile
+
+**验证**：
+- 部署时在云托管配置中，端口应设置为 `80`（或留空使用默认值）
+- 服务启动后会在 80 端口监听
+
 ### 2. 如何查看服务日志？
 
 - 在服务详情页，点击 **"日志"** 标签
