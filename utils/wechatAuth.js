@@ -7,8 +7,12 @@ const axios = require('axios');
  * @returns {Promise<Object>} 返回openid, session_key等信息
  */
 async function code2Session(code) {
-  const appid = process.env.WX_APPID || 'wxf55f604f65c8f87b';
-  const secret = process.env.WX_SECRET || 'eb43d3e9ed536c22db4234393bb861bf';
+  const appid = process.env.WX_APPID;
+  const secret = process.env.WX_SECRET;
+  
+  if (!appid || !secret) {
+    throw new Error('WX_APPID and WX_SECRET environment variables are required');
+  }
   
   const url = `https://api.weixin.qq.com/sns/jscode2session?appid=${appid}&secret=${secret}&js_code=${code}&grant_type=authorization_code`;
   

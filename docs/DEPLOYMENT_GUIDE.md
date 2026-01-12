@@ -75,10 +75,13 @@ curl -X POST http://localhost:3000/api/minigame/getUserGameInfo -H "Content-Type
    - **部署类型**：容器服务
    - **端口**：填写 `3000`
    - **Dockerfile 名称**：`Dockerfile`（已存在）
-   - **环境变量**：点击添加，填入以下变量：
+   - **环境变量**：点击添加，填入以下变量（请替换为您的实际值）：
      ```
-     WX_APPID=wxf55f604f65c8f87b
-     WX_SECRET=eb43d3e9ed536c22db4234393bb861bf
+     WX_APPID=your-wechat-appid
+     WX_SECRET=your-wechat-secret
+     TCB_ENV=your-env-id
+     TCB_SECRET_ID=your-secret-id
+     TCB_SECRET_KEY=your-secret-key
      ```
    - **公网访问**：开启 ✅
    - **内网访问**：关闭（按需）
