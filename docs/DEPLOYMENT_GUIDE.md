@@ -161,6 +161,21 @@ Liveness probe failed: dial tcp 10.30.2.12:80: connect: connection refused
 - 添加您的自定义域名
 - 按照提示配置DNS解析
 
+### 5. 默认域名可以用于正式上架吗？
+
+**默认域名**（如：`express-slime-216111-7-1352845565.sh.run.tcloudbase.com`）：
+- ✅ **可以用于**：开发测试、内部验证、功能测试
+- ⚠️ **不建议用于**：正式上架、生产环境、用户面向的应用
+
+**原因**：
+- 域名过长，不便于记忆和分享
+- 不够专业，影响品牌形象
+- 用户体验不佳
+
+**建议**：
+- 正式上架前务必配置自定义域名
+- 查看 `PRODUCTION_DOMAIN_GUIDE.md` 了解详细配置步骤
+
 ## 📝 API接口说明
 
 所有接口都使用 POST 方法，基础路径：`/api/minigame`

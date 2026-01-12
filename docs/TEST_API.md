@@ -169,15 +169,115 @@ curl -X POST http://localhost:3000/api/minigame/getUserGameInfo \
 
 ## 部署后测试
 
-部署到腾讯云托管后，将URL替换为您的服务域名：
+部署到腾讯云托管后，使用以下 curl 命令直接测试（可直接复制到命令行）：
+
+### ⚡ 快速测试命令（直接复制使用）
+
+#### Windows PowerShell 版本：
+
+```powershell
+# 测试1: 获取用户游戏信息
+curl.exe -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserGameInfo -H "Content-Type: application/json" -H "x-openid: test123" -d "{}"
+
+# 测试2: 设置用户游戏信息
+curl.exe -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/setUserGameInfo -H "Content-Type: application/json" -H "x-openid: test123" -d "{\"progressLevelID\":5,\"nickName\":\"测试玩家\",\"avatarUrl\":\"https://example.com/avatar.jpg\"}"
+
+# 测试3: 获取排行榜
+curl.exe -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserRankList -H "Content-Type: application/json" -d "{\"limit\":10}"
+
+# 测试4: 获取关卡配置
+curl.exe -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getLevelsConfig -H "Content-Type: application/json" -d "{}"
+
+# 测试5: 获取用户信息（使用body传递openid）
+curl.exe -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserGameInfo -H "Content-Type: application/json" -d "{\"openid\":\"test123\"}"
+```
+
+#### Linux/Mac 版本：
 
 ```bash
-# 替换 YOUR_DOMAIN 为您的实际域名
-curl -X POST https://YOUR_DOMAIN/api/minigame/getUserGameInfo \
-  -H "Content-Type: application/json" \
-  -H "x-openid: test123" \
-  -d "{}"
+# 测试1: 获取用户游戏信息
+curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserGameInfo -H "Content-Type: application/json" -H "x-openid: test123" -d "{}"
+
+# 测试2: 设置用户游戏信息
+curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/setUserGameInfo -H "Content-Type: application/json" -H "x-openid: test123" -d '{"progressLevelID":5,"nickName":"测试玩家","avatarUrl":"https://example.com/avatar.jpg"}'
+
+# 测试3: 获取排行榜
+curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserRankList -H "Content-Type: application/json" -d '{"limit":10}'
+
+# 测试4: 获取关卡配置
+curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getLevelsConfig -H "Content-Type: application/json" -d "{}"
+
+# 测试5: 获取用户信息（使用body传递openid）
+curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserGameInfo -H "Content-Type: application/json" -d '{"openid":"test123"}'
 ```
+
+### 📋 完整测试流程（按顺序执行）
+
+#### Windows PowerShell：
+
+```powershell
+# 步骤1: 创建用户并设置游戏信息
+curl.exe -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/setUserGameInfo -H "Content-Type: application/json" -H "x-openid: player001" -d "{\"progressLevelID\":10,\"nickName\":\"玩家1\"}"
+
+# 步骤2: 创建另一个用户
+curl.exe -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/setUserGameInfo -H "Content-Type: application/json" -H "x-openid: player002" -d "{\"progressLevelID\":20,\"nickName\":\"玩家2\"}"
+
+# 步骤3: 获取排行榜（应该能看到这两个玩家）
+curl.exe -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserRankList -H "Content-Type: application/json" -d "{}"
+
+# 步骤4: 获取玩家1的信息
+curl.exe -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserGameInfo -H "Content-Type: application/json" -H "x-openid: player001" -d "{}"
+```
+
+#### Linux/Mac：
+
+```bash
+# 步骤1: 创建用户并设置游戏信息
+curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/setUserGameInfo -H "Content-Type: application/json" -H "x-openid: player001" -d '{"progressLevelID":10,"nickName":"玩家1"}'
+
+# 步骤2: 创建另一个用户
+curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/setUserGameInfo -H "Content-Type: application/json" -H "x-openid: player002" -d '{"progressLevelID":20,"nickName":"玩家2"}'
+
+# 步骤3: 获取排行榜（应该能看到这两个玩家）
+curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserRankList -H "Content-Type: application/json" -d "{}"
+
+# 步骤4: 获取玩家1的信息
+curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserGameInfo -H "Content-Type: application/json" -H "x-openid: player001" -d "{}"
+```
+
+### 🔍 预期响应示例
+
+**成功响应示例**（获取用户信息）：
+```json
+{
+  "code": 0,
+  "data": {
+    "openid": "test123",
+    "openID": "test123",
+    "userGameInfo": {},
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-01-01T00:00:00.000Z",
+    "progressLevelID": 0,
+    "nickName": "",
+    "avatarUrl": ""
+  },
+  "msg": "no result found, created empty info"
+}
+```
+
+### 💡 使用 Postman 测试
+
+1. 创建新的请求
+2. **Method**: POST
+3. **URL**: `https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserGameInfo`
+4. **Headers**: 
+   - `Content-Type: application/json`
+   - `x-openid: test123`
+5. **Body** (raw, JSON):
+   ```json
+   {}
+   ```
+6. 点击 Send
 
 ## 错误处理测试
 
