@@ -93,10 +93,10 @@ curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api
 curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/setUserGameInfo -H "Content-Type: application/json" -H "x-openid: player002" -d '{"progressLevelID":20,"nickName":"Player2"}'
 
 # 步骤3: 获取排行榜
-curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserRankList -H "Content-Type: application/json" -d "{}"
+curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserRankListV2 -H "Content-Type: application/json" -d "{}"
 
 # 步骤4: 获取玩家1的信息
-curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserGameInfo -H "Content-Type: application/json" -H "x-openid: player002" -d "{}"
+curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserGameInfoV2 -H "Content-Type: application/json" -H "x-openid: ox0H16xXrrwRAzCI7IkNoXtsW7CI" -d "{}"
 ```
 
 ---
