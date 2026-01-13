@@ -15,6 +15,10 @@ var http = require('http');
 var port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
 
+// Log the port being used for debugging
+console.log('Server will listen on port:', port);
+console.log('PORT environment variable:', process.env.PORT || 'not set (using default 3000)');
+
 /**
  * Create HTTP server.
  */
