@@ -45,7 +45,8 @@ cloudrun-express-slime/
 │   └── minigame.js       # 小游戏API路由 ⭐
 ├── utils/
 │   ├── wechatAuth.js     # 微信认证工具 ⭐
-│   └── mockDatabase.js   # 内存数据库模拟 ⭐
+│   ├── cloudbaseDB.js   # CloudBase数据库工具 ⭐
+│   └── version.js        # 版本信息模块
 ├── package.json          # 项目依赖
 ├── Dockerfile           # Docker构建文件
 ├── DEPLOYMENT_GUIDE.md  # 详细部署指南 📖
@@ -178,9 +179,8 @@ async function setUserGameInfo(openid, gameInfo) {
 
 ## ⚠️ 重要提示
 
-1. **当前使用内存数据库**：数据在服务重启后会丢失，仅用于测试
-2. **生产环境**：需要连接真实数据库（MongoDB/MySQL）
-3. **安全性**：生产环境请使用环境变量存储敏感信息
+1. **数据库配置**：项目已集成CloudBase文档型数据库，需要在云托管控制台配置 `TCB_ENV` 环境变量
+2. **安全性**：生产环境请使用环境变量存储敏感信息
 
 ## 📚 相关文档
 
@@ -190,11 +190,8 @@ async function setUserGameInfo(openid, gameInfo) {
 
 ## ❓ 常见问题
 
-**Q: 数据为什么丢失了？**  
-A: 当前使用内存数据库，服务重启后数据会丢失。生产环境需要连接真实数据库。
-
-**Q: 如何连接真实数据库？**  
-A: 需要修改 `utils/mockDatabase.js`，替换为真实数据库操作。具体步骤见部署指南。
+**Q: 如何配置数据库？**  
+A: 在云托管控制台配置 `TCB_ENV` 环境变量，指向您的云开发环境ID。详细步骤见[数据库配置指南](./CLOUDBASE_CONFIG.md)。
 
 **Q: 微信登录code从哪里获取？**  
 A: 在Unity中调用微信SDK的登录接口，会返回code，然后调用 `getCode2Session` 接口。

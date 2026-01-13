@@ -19,13 +19,7 @@ curl https://your-service-domain/api/version
   "code": 0,
   "data": {
     "version": "0.0.0",
-    "buildTime": "2024-01-15T10:30:45.123Z",
-    "git": {
-      "commit": "abc1234",
-      "branch": "main"
-    },
-    "nodeVersion": "v18.15.0",
-    "environment": "production"
+    "buildTime": "2024-01-15T10:30:45.123Z"
   },
   "msg": "success"
 }
@@ -47,10 +41,7 @@ curl https://your-service-domain/api/version
 服务启动时，日志会输出：
 
 ```
-========================================
-🚀 Server Starting...
-📦 Version: v0.0.0 (build: 2024-01-15T10:30:45.123Z, node: v18.15.0)
-========================================
+🚀 Server Starting - v0.0.0 (build: 2024-01-15T10:30:45.123Z)
 ```
 
 ### 3. 验证方法
@@ -130,14 +121,7 @@ console.log('Custom Config:', process.env.CUSTOM_CONFIG);
 - 部署时间可能比构建时间晚几分钟（包含上传、部署等步骤）
 - 通常差异在1-5分钟内是正常的
 
-### Q2: 如何确认Git代码是最新的？
-
-**A**: 
-1. 如果使用Git部署，在云托管控制台查看部署记录中的commit hash
-2. 在本地执行 `git log -1` 查看最新commit
-3. 对比两者是否一致
-
-### Q3: 部署后立即调用API，返回的还是旧版本？
+### Q2: 部署后立即调用API，返回的还是旧版本？
 
 **A**: 可能的原因：
 1. **部署未完成**：等待部署状态变为"运行中"
@@ -145,7 +129,7 @@ console.log('Custom Config:', process.env.CUSTOM_CONFIG);
 3. **CDN缓存**：如果使用了CDN，可能需要等待缓存过期
 4. **负载均衡**：如果有多个实例，可能部分实例还未更新
 
-### Q4: 如何强制使用最新代码？
+### Q3: 如何强制使用最新代码？
 
 **A**: 
 1. 确保部署状态为"运行中"

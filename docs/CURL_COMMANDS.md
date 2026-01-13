@@ -34,6 +34,11 @@ curl.exe -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com
 curl.exe -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserGameInfo -H "Content-Type: application/json" -d "{\"openid\":\"test123\"}"
 ```
 
+### 6. 获取服务版本信息（验证部署版本）
+```powershell
+curl.exe https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/version
+```
+
 ---
 
 ## 🐧 Linux/Mac 命令（直接复制使用）
@@ -61,6 +66,11 @@ curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api
 ### 5. 获取用户信息（使用body传递openid）
 ```bash
 curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserGameInfo -H "Content-Type: application/json" -d '{"openid":"test123"}'
+```
+
+### 6. 获取服务版本信息（验证部署版本）
+```bash
+curl https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/version
 ```
 
 ---
@@ -97,6 +107,8 @@ curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api
 
 # 步骤4: 获取玩家1的信息
 curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserGameInfoV2 -H "Content-Type: application/json" -H "x-openid: ox0H16xXrrwRAzCI7IkNoXtsW7CI" -d "{}"
+
+curl https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/version
 ```
 
 ---

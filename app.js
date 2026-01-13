@@ -17,10 +17,7 @@ const { getVersionString } = require('./utils/version');
 var app = express();
 
 // 启动时输出版本信息
-console.log('========================================');
-console.log('🚀 Server Starting...');
-console.log('📦 Version:', getVersionString());
-console.log('========================================');
+console.log('🚀 Server Starting -', getVersionString());
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

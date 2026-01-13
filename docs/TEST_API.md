@@ -298,7 +298,7 @@ curl -X POST http://localhost:3000/api/minigame/getUserGameInfo \
 
 ## 注意事项
 
-1. **内存数据库限制**：当前使用内存数据库，服务重启后数据会丢失
+1. **数据库配置**：确保已配置 `TCB_ENV` 环境变量，指向正确的云开发环境
 2. **微信code**：`getCode2Session` 接口需要真实的微信登录code，测试时可能无法使用
 3. **跨域问题**：如果从浏览器直接调用，可能遇到跨域问题，需要配置CORS
 
