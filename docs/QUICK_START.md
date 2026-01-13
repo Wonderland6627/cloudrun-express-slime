@@ -41,7 +41,6 @@ cloudrun-express-slime/
 ├── app.js                 # Express应用主文件
 ├── routes/
 │   ├── index.js          # 首页路由
-│   ├── users.js          # 用户路由（示例）
 │   └── minigame.js       # 小游戏API路由 ⭐
 ├── utils/
 │   ├── wechatAuth.js     # 微信认证工具 ⭐
