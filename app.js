@@ -11,7 +11,16 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var minigameRouter = require('./routes/minigame');
 
+// 加载版本信息模块
+const { getVersionString } = require('./utils/version');
+
 var app = express();
+
+// 启动时输出版本信息
+console.log('========================================');
+console.log('🚀 Server Starting...');
+console.log('📦 Version:', getVersionString());
+console.log('========================================');
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
