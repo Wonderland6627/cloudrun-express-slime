@@ -1,3 +1,93 @@
+# CloudRun Express 小游戏后端服务
+
+基于 Express 和 CloudBase 的小游戏后端服务，采用标准分层架构设计。
+
+## 📁 项目架构
+
+本项目采用标准的分层架构：
+
+```
+routes/          # 路由层 - 路由定义和中间件绑定
+controllers/      # 控制器层 - 处理HTTP请求/响应
+services/         # 服务层 - 业务逻辑处理
+middlewares/      # 中间件层 - 认证、验证、错误处理
+utils/            # 工具层 - 数据库操作、第三方API
+config/           # 配置层 - 统一配置管理
+```
+
+详细架构说明请查看：[架构使用文档](./docs/ARCHITECTURE_GUIDE.md)
+
+## 🚀 快速开始
+
+### 本地开发
+
+```bash
+npm install
+npm start
+```
+
+服务将在 `http://localhost:3000` 启动
+
+### 环境变量配置
+
+创建 `.env` 文件：
+
+```env
+TCB_ENV=your-env-id
+TCB_SECRET_ID=your-secret-id
+TCB_SECRET_KEY=your-secret-key
+WX_APPID=your-wechat-appid
+WX_SECRET=your-wechat-secret
+```
+
+## 📚 文档
+
+### 核心文档
+- [架构使用文档](./docs/ARCHITECTURE_GUIDE.md) - 标准架构使用指南
+- [快速开始](./docs/QUICK_START.md) - 项目快速开始
+- [API测试文档](./docs/TEST_API.md) - API接口测试指南
+- [部署指南](./docs/DEPLOYMENT_GUIDE.md) - 部署到腾讯云托管
+
+### 配置文档
+- [环境配置](./docs/ENV_SETUP.md) - 环境变量配置说明
+- [CloudBase配置](./docs/CLOUDBASE_CONFIG.md) - CloudBase数据库配置
+- [数据库连接说明](./docs/DATABASE_CONNECTION_EXPLAINED.md) - 数据库连接详解
+
+### 其他文档
+- [版本验证](./docs/VERSION_VERIFICATION.md) - 版本验证方法
+
+## 📋 API接口
+
+所有接口统一使用以下响应格式：
+
+**成功响应**：
+```json
+{
+  "code": 0,
+  "data": {},
+  "msg": "success"
+}
+```
+
+**错误响应**：
+```json
+{
+  "code": -1,
+  "msg": "error message"
+}
+```
+
+### 接口列表
+
+- `POST /api/minigame/getCode2Session` - 获取微信用户信息
+- `POST /api/minigame/getUserWXContext` - 获取微信上下文
+- `POST /api/minigame/getUserGameInfoV2` - 获取用户游戏信息
+- `POST /api/minigame/setUserGameInfoV2` - 设置用户游戏信息
+- `POST /api/minigame/getUserRankListV2` - 获取排行榜
+- `POST /api/minigame/getLevelsConfigV2` - 获取关卡配置
+
+---
+
 # 快速部署 Express 应用
 
 本篇文章为您介绍应用控制台的部署方案, 您可以通过以下操作完成部署。

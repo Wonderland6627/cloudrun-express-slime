@@ -26,7 +26,7 @@ npm start
 
 ```bash
 # 测试获取用户信息（会自动创建空记录）
-curl -X POST http://localhost:3000/api/minigame/getUserGameInfo \
+curl -X POST http://localhost:3000/api/minigame/getUserGameInfoV2 \
   -H "Content-Type: application/json" \
   -H "x-openid: test123" \
   -d "{}"
@@ -39,15 +39,29 @@ curl -X POST http://localhost:3000/api/minigame/getUserGameInfo \
 ```
 cloudrun-express-slime/
 ├── app.js                 # Express应用主文件
-├── routes/
+├── config/                # 配置层
+│   ├── constants.js      # 常量配置
+│   └── database.js       # 数据库配置
+├── controllers/           # 控制器层
+│   └── minigameController.js  # 小游戏控制器
+├── services/              # 服务层（业务逻辑）
+│   ├── authService.js    # 认证服务
+│   ├── userService.js    # 用户服务
+│   └── gameService.js    # 游戏服务
+├── middlewares/           # 中间件层
+│   ├── auth.js           # 认证中间件
+│   ├── errorHandler.js   # 错误处理中间件
+│   ├── response.js        # 响应格式化中间件
+│   └── validator.js      # 参数验证中间件
+├── routes/                # 路由层
 │   ├── index.js          # 首页路由
 │   └── minigame.js       # 小游戏API路由 ⭐
-├── utils/
+├── utils/                 # 工具层（DAO层）
 │   ├── wechatAuth.js     # 微信认证工具 ⭐
-│   ├── cloudbaseDB.js   # CloudBase数据库工具 ⭐
+│   ├── cloudbaseDB.js    # CloudBase数据库工具（DAO层）⭐
 │   └── version.js        # 版本信息模块
 ├── package.json          # 项目依赖
-├── Dockerfile           # Docker构建文件
+├── Dockerfile            # Docker构建文件
 ├── DEPLOYMENT_GUIDE.md  # 详细部署指南 📖
 ├── TEST_API.md          # API测试指南 📖
 └── QUICK_START.md       # 本文件
@@ -60,10 +74,11 @@ cloudrun-express-slime/
 | 接口 | 说明 | 需要参数 |
 |------|------|----------|
 | `POST /getCode2Session` | 微信登录，获取openid | `code` (微信登录code) |
-| `POST /getUserGameInfo` | 获取用户游戏信息 | `openid` (header或body) |
-| `POST /setUserGameInfo` | 设置用户游戏信息 | `openid` + 游戏数据 |
-| `POST /getUserRankList` | 获取排行榜 | 无（可选limit） |
-| `POST /getLevelsConfig` | 获取关卡配置 | 无（可选levelId) |
+| `POST /getUserWXContext` | 获取微信上下文 | `openid` (header或body) |
+| `POST /getUserGameInfoV2` | 获取用户游戏信息 | `openid` (header或body) |
+| `POST /setUserGameInfoV2` | 设置用户游戏信息 | `openid` + 游戏数据 |
+| `POST /getUserRankListV2` | 获取排行榜 | 无（可选limit，可选openid） |
+| `POST /getLevelsConfigV2` | 获取关卡配置 | 无（可选levelId) |
 
 ## 📝 接口调用示例
 
@@ -81,7 +96,7 @@ public class GameAPI : MonoBehaviour
     // 获取用户游戏信息
     public IEnumerator GetUserGameInfo(string openid)
     {
-        string url = baseUrl + "/getUserGameInfo";
+        string url = baseUrl + "/getUserGameInfoV2";
         
         using (UnityWebRequest request = new UnityWebRequest(url, "POST"))
         {
@@ -108,7 +123,7 @@ public class GameAPI : MonoBehaviour
     // 设置用户游戏信息
     public IEnumerator SetUserGameInfo(string openid, int levelId, string nickName)
     {
-        string url = baseUrl + "/setUserGameInfo";
+        string url = baseUrl + "/setUserGameInfoV2";
         string jsonData = $"{{\"progressLevelID\":{levelId},\"nickName\":\"{nickName}\"}}";
         
         using (UnityWebRequest request = new UnityWebRequest(url, "POST"))
@@ -135,7 +150,7 @@ public class GameAPI : MonoBehaviour
 ```javascript
 // 获取用户游戏信息
 async function getUserGameInfo(openid) {
-  const response = await fetch('http://localhost:3000/api/minigame/getUserGameInfo', {
+  const response = await fetch('http://localhost:3000/api/minigame/getUserGameInfoV2', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -151,7 +166,7 @@ async function getUserGameInfo(openid) {
 
 // 设置用户游戏信息
 async function setUserGameInfo(openid, gameInfo) {
-  const response = await fetch('http://localhost:3000/api/minigame/setUserGameInfo', {
+  const response = await fetch('http://localhost:3000/api/minigame/setUserGameInfoV2', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

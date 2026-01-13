@@ -1,9 +1,11 @@
-// CloudBase 文档型数据库工具类
+// CloudBase 文档型数据库工具类（DAO层 - 纯数据访问）
 const cloudbase = require('@cloudbase/node-sdk');
+const dbConfig = require('../config/database');
+const { COLLECTIONS } = require('../config/constants');
 
 // 初始化 CloudBase 应用
-// 云托管环境下，优先使用环境变量配置
-const envId = process.env.TCB_ENV || process.env.ENV_ID; // 云开发环境ID
+const envId = dbConfig.getEnvId();
+const initConfig = dbConfig.getAuthConfig();
 
 // 诊断日志：输出环境变量配置状态
 console.log('[CloudBase DB] Initializing database connection...');
@@ -18,37 +20,28 @@ if (!envId) {
   console.warn('[CloudBase DB] ⚠️  Example: TCB_ENV=your-env-id');
 }
 
-const initConfig = {
-  env: envId, // 如果为undefined，SDK会使用默认环境
-};
-
-// 如果提供了密钥，则使用密钥认证
-if (process.env.TCB_SECRET_ID && process.env.TCB_SECRET_KEY) {
-  initConfig.secretId = process.env.TCB_SECRET_ID;
-  initConfig.secretKey = process.env.TCB_SECRET_KEY;
+if (initConfig.secretId && initConfig.secretKey) {
   console.log('[CloudBase DB] Using Secret ID/Key authentication');
 } else {
   console.log('[CloudBase DB] Using Service Role authentication (CloudRun default)');
 }
-// 云托管环境下，如果配置了服务角色，可以不传 secretId 和 secretKey
 
 const app = cloudbase.init(initConfig);
 
 // 获取数据库实例
 const db = app.database();
 
-// 集合名称常量
-const COLLECTIONS = {
-  USER_GAME_INFOS: 'UserGameInfos',
-  LEVELS: 'Levels'
-};
+// 导出command对象供Service层使用（用于构建查询条件）
+const command = db.command;
+
+// ==================== 用户相关DAO方法 ====================
 
 /**
- * 获取用户游戏信息
+ * 根据openID查询用户游戏信息
  * @param {string} openID - 用户openID
- * @returns {Promise<Object>} 用户游戏信息
+ * @returns {Promise<Object|null>} 用户游戏信息，不存在返回null
  */
-async function getUserGameInfo(openID) {
+async function findUserByOpenID(openID) {
   try {
     const collection = db.collection(COLLECTIONS.USER_GAME_INFOS);
     const result = await collection.where({
@@ -58,169 +51,117 @@ async function getUserGameInfo(openID) {
     if (result.data && result.data.length > 0) {
       return result.data[0];
     }
-
-    // 如果没有数据，创建空记录
-    const now = new Date();
-    const emptyData = {
-      openID: openID,
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    const addResult = await collection.add(emptyData);
-    if (addResult.id) {
-      return {
-        ...emptyData,
-        _id: addResult.id
-      };
-    }
-
-    return emptyData;
+    return null;
   } catch (error) {
-    console.error('getUserGameInfo error:', error);
+    console.error('findUserByOpenID error:', error);
     throw error;
   }
 }
 
 /**
- * 设置用户游戏信息
- * @param {string} openID - 用户openID
- * @param {Object} gameInfo - 游戏信息对象
- * @returns {Promise<Object>} 更新结果
+ * 创建用户游戏信息记录
+ * @param {Object} userData - 用户数据对象
+ * @returns {Promise<Object>} 创建的用户记录（包含_id）
  */
-async function setUserGameInfo(openID, gameInfo) {
+async function createUser(userData) {
   try {
     const collection = db.collection(COLLECTIONS.USER_GAME_INFOS);
     const now = new Date();
-
-    // 构建更新数据
-    const updateData = {
-      updatedAt: now,
+    
+    const dataToInsert = {
+      ...userData,
+      createdAt: userData.createdAt || now,
+      updatedAt: userData.updatedAt || now
     };
+    
+    const addResult = await collection.add(dataToInsert);
+    
+    return {
+      _id: addResult.id,
+      ...dataToInsert
+    };
+  } catch (error) {
+    console.error('createUser error:', error);
+    throw error;
+  }
+}
 
-    // 只更新传入的字段
-    if (gameInfo.progressLevelID !== undefined) {
-      updateData.progressLevelID = gameInfo.progressLevelID;
-    }
-    if (gameInfo.nickName !== undefined) {
-      updateData.nickName = gameInfo.nickName;
-    }
-    if (gameInfo.avatarUrl !== undefined) {
-      updateData.avatarUrl = gameInfo.avatarUrl;
-    }
-    if (gameInfo.openID !== undefined) {
-      updateData.openID = gameInfo.openID;
-    }
-
-    // 检查记录是否存在
-    const existResult = await collection.where({
+/**
+ * 更新用户游戏信息
+ * @param {string} openID - 用户openID
+ * @param {Object} updateData - 要更新的数据
+ * @returns {Promise<Object>} 更新后的用户记录
+ */
+async function updateUser(openID, updateData) {
+  try {
+    const collection = db.collection(COLLECTIONS.USER_GAME_INFOS);
+    const now = new Date();
+    
+    const dataToUpdate = {
+      ...updateData,
+      updatedAt: now
+    };
+    
+    await collection.where({
       openID: openID
-    }).get();
-
-    if (!existResult.data || existResult.data.length === 0) {
-      // 创建新记录
-      const addData = {
-        openID: openID,
-        createdAt: now,
-        updatedAt: now,
-        ...updateData
-      };
-      const addResult = await collection.add(addData);
-      return {
-        _id: addResult.id,
-        ...addData
-      };
-    }
-
-    // 更新现有记录
-    const updateResult = await collection.where({
-      openID: openID
-    }).update(updateData);
-
+    }).update(dataToUpdate);
+    
     // 返回更新后的数据
     const updatedResult = await collection.where({
       openID: openID
     }).get();
-
-    return updatedResult.data && updatedResult.data.length > 0 
-      ? updatedResult.data[0] 
-      : { code: 0, msg: 'update success' };
+    
+    if (updatedResult.data && updatedResult.data.length > 0) {
+      return updatedResult.data[0];
+    }
+    
+    throw new Error('User not found after update');
   } catch (error) {
-    console.error('setUserGameInfo error:', error);
+    console.error('updateUser error:', error);
     throw error;
   }
 }
 
 /**
- * 获取用户排行榜
- * @param {number} limit - 返回数量限制，默认100
- * @param {string} currentOpenID - 当前用户openID（可选）
- * @returns {Promise<Array>} 排行榜列表
+ * 根据条件查询用户列表
+ * @param {Object} condition - 查询条件
+ * @param {Object} options - 查询选项 { limit, orderBy, orderDirection }
+ * @returns {Promise<Array>} 用户列表
  */
-async function getUserRankList(limit = 100, currentOpenID = null) {
+async function findUsersByCondition(condition, options = {}) {
   try {
     const collection = db.collection(COLLECTIONS.USER_GAME_INFOS);
     const _ = db.command;
-
-    // 获取前100名玩家数据，按 progressLevelID 降序排序
-    // 筛选条件：progressLevelID 必须大于 0，nickName 必须存在且不为空字符串
-    const result = await collection
-      .where({
-        progressLevelID: _.gt(0),
-        nickName: _.and(_.exists(true), _.neq(''))
-      })
-      .orderBy('progressLevelID', 'desc')
-      .limit(limit)
-      .get();
-
-    let rankList = result.data || [];
-
-    // 如果提供了当前用户openID，检查自己是否在列表中
-    if (currentOpenID) {
-      const selfInList = rankList.some(item => item.openID === currentOpenID);
-      
-      if (!selfInList) {
-        // 如果自己不在前100名，查询自己的数据
-        const selfResult = await collection
-          .where({
-            openID: currentOpenID
-          })
-          .get();
-
-        if (selfResult.data && selfResult.data.length > 0) {
-          const selfData = selfResult.data[0];
-          const selfProgressLevelID = selfData.progressLevelID || 0;
-
-          // 判断自己是否满足前100的条件
-          if (selfProgressLevelID > 0) {
-            if (rankList.length < limit) {
-              // 少于100条，直接加入
-              rankList.push(selfData);
-            } else if (rankList.length > 0) {
-              // 已有100条，检查自己的 progressLevelID 是否 >= 第100名的 progressLevelID
-              const lastRankProgressLevelID = rankList[rankList.length - 1].progressLevelID || 0;
-              if (selfProgressLevelID >= lastRankProgressLevelID) {
-                rankList[rankList.length - 1] = selfData;
-              }
-            }
-          }
-        }
-      }
+    
+    let query = collection.where(condition);
+    
+    // 排序
+    if (options.orderBy) {
+      const direction = options.orderDirection || 'desc';
+      query = query.orderBy(options.orderBy, direction);
     }
-
-    return rankList;
+    
+    // 限制数量
+    if (options.limit) {
+      query = query.limit(options.limit);
+    }
+    
+    const result = await query.get();
+    return result.data || [];
   } catch (error) {
-    console.error('getUserRankList error:', error);
+    console.error('findUsersByCondition error:', error);
     throw error;
   }
 }
 
+// ==================== 关卡相关DAO方法 ====================
+
 /**
- * 获取关卡配置
+ * 根据ID查询关卡配置
  * @param {string} levelId - 关卡ID
- * @returns {Promise<Object|null>} 关卡配置数据
+ * @returns {Promise<Object|null>} 关卡配置，不存在返回null
  */
-async function getLevelsConfig(levelId) {
+async function findLevelById(levelId) {
   try {
     const collection = db.collection(COLLECTIONS.LEVELS);
     
@@ -245,18 +186,22 @@ async function getLevelsConfig(levelId) {
     if (result.data && result.data.length > 0) {
       return result.data[0];
     }
-
+    
     return null;
   } catch (error) {
-    console.error('getLevelsConfig error:', error);
+    console.error('findLevelById error:', error);
     throw error;
   }
 }
 
 module.exports = {
-  getUserGameInfo,
-  setUserGameInfo,
-  getUserRankList,
-  getLevelsConfig
+  // 基础DAO方法
+  findUserByOpenID,
+  createUser,
+  updateUser,
+  findUsersByCondition,
+  findLevelById,
+  
+  // 导出command对象供Service层使用
+  command
 };
-

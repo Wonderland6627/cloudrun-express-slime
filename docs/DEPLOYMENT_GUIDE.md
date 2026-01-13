@@ -32,7 +32,7 @@ npm start
 
 # 4. 测试API（在另一个终端）
 # 测试获取用户信息接口
-curl -X POST http://localhost:3000/api/minigame/getUserGameInfo -H "Content-Type: application/json" -d "{\"openid\":\"test123\"}"
+curl -X POST http://localhost:3000/api/minigame/getUserGameInfoV2 -H "Content-Type: application/json" -d "{\"openid\":\"test123\"}"
 ```
 
 ### 第二步：登录腾讯云控制台
@@ -118,7 +118,7 @@ curl -X POST http://localhost:3000/api/minigame/getUserGameInfo -H "Content-Type
 curl https://your-service-xxx.tcb.qcloud.la/
 
 # 测试获取用户信息
-curl -X POST https://your-service-xxx.tcb.qcloud.la/api/minigame/getUserGameInfo \
+curl -X POST https://your-service-xxx.tcb.qcloud.la/api/minigame/getUserGameInfoV2 \
   -H "Content-Type: application/json" \
   -d "{\"openid\":\"test123\"}"
 ```
@@ -219,30 +219,30 @@ POST /api/minigame/getCode2Session
 Body: { "code": "微信登录code" }
 ```
 
-### 2. getUserGameInfo - 获取用户游戏信息
+### 2. getUserGameInfoV2 - 获取用户游戏信息
 ```
-POST /api/minigame/getUserGameInfo
+POST /api/minigame/getUserGameInfoV2
 Header: x-openid: 用户openid
 或
 Body: { "openid": "用户openid" }
 ```
 
-### 3. setUserGameInfo - 设置用户游戏信息
+### 3. setUserGameInfoV2 - 设置用户游戏信息
 ```
-POST /api/minigame/setUserGameInfo
+POST /api/minigame/setUserGameInfoV2
 Header: x-openid: 用户openid
 Body: { "progressLevelID": 1, "nickName": "玩家名", ... }
 ```
 
-### 4. getUserRankList - 获取排行榜
+### 4. getUserRankListV2 - 获取排行榜
 ```
-POST /api/minigame/getUserRankList
+POST /api/minigame/getUserRankListV2
 Body: { "limit": 100 }  // 可选
 ```
 
-### 5. getLevelsConfig - 获取关卡配置
+### 5. getLevelsConfigV2 - 获取关卡配置
 ```
-POST /api/minigame/getLevelsConfig
+POST /api/minigame/getLevelsConfigV2
 Body: { "levelId": "关卡ID" }  // 可选，默认使用测试ID
 ```
 
