@@ -3,14 +3,32 @@ const cloudbase = require('@cloudbase/node-sdk');
 
 // 初始化 CloudBase 应用
 // 云托管环境下，优先使用环境变量配置
+const envId = process.env.TCB_ENV || process.env.ENV_ID; // 云开发环境ID
+
+// 诊断日志：输出环境变量配置状态
+console.log('[CloudBase DB] Initializing database connection...');
+console.log('[CloudBase DB] TCB_ENV:', process.env.TCB_ENV || '(not set)');
+console.log('[CloudBase DB] ENV_ID:', process.env.ENV_ID || '(not set)');
+console.log('[CloudBase DB] Using env:', envId || '(will use default - first created environment)');
+
+if (!envId) {
+  console.warn('[CloudBase DB] ⚠️  WARNING: No environment ID specified!');
+  console.warn('[CloudBase DB] ⚠️  SDK will use the first created environment by default.');
+  console.warn('[CloudBase DB] ⚠️  To fix this, set TCB_ENV or ENV_ID environment variable.');
+  console.warn('[CloudBase DB] ⚠️  Example: TCB_ENV=your-env-id');
+}
+
 const initConfig = {
-  env: process.env.TCB_ENV || process.env.ENV_ID, // 云开发环境ID
+  env: envId, // 如果为undefined，SDK会使用默认环境
 };
 
 // 如果提供了密钥，则使用密钥认证
 if (process.env.TCB_SECRET_ID && process.env.TCB_SECRET_KEY) {
   initConfig.secretId = process.env.TCB_SECRET_ID;
   initConfig.secretKey = process.env.TCB_SECRET_KEY;
+  console.log('[CloudBase DB] Using Secret ID/Key authentication');
+} else {
+  console.log('[CloudBase DB] Using Service Role authentication (CloudRun default)');
 }
 // 云托管环境下，如果配置了服务角色，可以不传 secretId 和 secretKey
 
