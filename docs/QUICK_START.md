@@ -57,7 +57,8 @@ cloudrun-express-slime/
 │   ├── index.js          # 首页路由
 │   └── minigame.js       # 小游戏API路由 ⭐
 ├── utils/                 # 工具层（DAO层）
-│   ├── wechatAuth.js     # 微信认证工具 ⭐
+│   ├── platformAuth.js   # 多平台认证工具（微信/抖音/B站）⭐
+│   ├── tokenManager.js   # JWT Token管理器 ⭐
 │   ├── cloudbaseDB.js    # CloudBase数据库工具（DAO层）⭐
 │   └── version.js        # 版本信息模块
 ├── package.json          # 项目依赖

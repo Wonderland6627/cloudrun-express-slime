@@ -23,6 +23,15 @@ TCB_SECRET_KEY=your-secret-key
 # 微信小程序配置（必需）
 WX_APPID=your-wechat-appid
 WX_SECRET=your-wechat-secret
+
+# 认证系统配置（必需）
+TOKEN_SECRET=your-secret-key-change-in-production  # 生产环境必须修改为强随机字符串
+
+# 测试模式配置（可选，仅开发环境使用）
+ENABLE_TEST_MODE=false          # 是否启用测试模式
+TEST_TOKEN=any                  # 测试token，设置为"any"允许任意token
+
+# 注意：系统仅支持token认证，不再支持直接传递openid
 ```
 
 **注意**：`.env` 文件已在 `.gitignore` 中，不会被提交到代码仓库。
@@ -41,6 +50,9 @@ WX_SECRET=your-wechat-secret
 | `TCB_SECRET_KEY` | `your-secret-key` | 腾讯云SecretKey |
 | `WX_APPID` | `your-wechat-appid` | 微信小程序AppID |
 | `WX_SECRET` | `your-wechat-secret` | 微信小程序Secret |
+| `TOKEN_SECRET` | `your-secret-key` | Token签名密钥（生产环境必须修改） |
+| `ENABLE_TEST_MODE` | `false` | 是否启用测试模式（开发环境可设为true） |
+| `TEST_TOKEN` | `any` | 测试模式token（开发环境使用） |
 
 5. 保存配置后，**重新部署服务**使环境变量生效
 
@@ -55,10 +67,23 @@ WX_SECRET=your-wechat-secret
    ```
 3. 测试接口：
    ```bash
-   # 测试获取用户游戏信息（需要提供 openid）
+   # 方式1：使用测试模式（推荐）
    curl -X POST http://localhost:3000/api/minigame/getUserGameInfoV2 \
      -H "Content-Type: application/json" \
-     -H "x-openid: test-openid-123" \
+     -H "x-test-token: any" \
+     -H "x-test-openid: test-user-123" \
+     -d "{}"
+   
+   # 方式2：先获取token，再使用token访问
+   # 1. 获取token（需要真实的微信code）
+   curl -X POST http://localhost:3000/api/minigame/getCode2Session \
+     -H "Content-Type: application/json" \
+     -d '{"code": "wx_code_from_miniprogram"}'
+   
+   # 2. 使用返回的token访问API
+   curl -X POST http://localhost:3000/api/minigame/getUserGameInfoV2 \
+     -H "Content-Type: application/json" \
+     -H "Authorization: Bearer YOUR_TOKEN_HERE" \
      -d "{}"
    ```
 
@@ -69,9 +94,10 @@ WX_SECRET=your-wechat-secret
 3. 调用接口测试：
    ```bash
    # 替换为您的云托管域名
+   # 注意：生产环境应使用真实的token，不要使用测试模式
    curl -X POST https://your-domain/api/minigame/getUserGameInfoV2 \
      -H "Content-Type: application/json" \
-     -H "x-openid: test-openid-123" \
+     -H "Authorization: Bearer YOUR_TOKEN_HERE" \
      -d "{}"
    ```
 
@@ -81,6 +107,13 @@ WX_SECRET=your-wechat-secret
 2. **生产环境使用云托管环境变量**，不要硬编码密钥
 3. **定期轮换密钥**，提高安全性
 4. **限制密钥权限**，只授予必要的云开发访问权限
+5. **生产环境必须修改TOKEN_SECRET**：使用强随机字符串（至少32字符）
+6. **生产环境禁用测试模式**：设置 `ENABLE_TEST_MODE=false`
+7. **使用HTTPS传输**：确保token在传输过程中的安全性
+
+## 📚 认证系统说明
+
+详细的认证系统使用说明请参考：[认证系统使用指南](./AUTH_GUIDE.md)
 
 ## 📊 数据库集合检查
 

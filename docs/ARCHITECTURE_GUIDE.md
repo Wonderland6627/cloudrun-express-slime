@@ -26,7 +26,8 @@ project/
 │   └── minigame.js        # 小游戏路由
 ├── utils/                  # 工具层
 │   ├── cloudbaseDB.js     # 数据库操作（DAO层）
-│   ├── wechatAuth.js      # 微信认证工具
+│   ├── platformAuth.js    # 多平台认证工具（微信/抖音/B站）
+│   ├── tokenManager.js    # JWT Token管理器
 │   └── version.js         # 版本工具
 └── views/                  # 视图层（Jade模板）
 ```

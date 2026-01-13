@@ -7,12 +7,17 @@ const { AppError } = require('../middlewares/errorHandler');
 const { RESPONSE_CODE } = require('../config/constants');
 
 /**
- * 通过code获取微信用户信息
+ * 通过code获取用户session信息（支持多平台）
  */
 async function getCode2Session(req, res, next) {
   try {
     const code = req.body.code || req.query.code;
-    const sessionInfo = await authService.getWeChatSession(code);
+    // 检测平台类型
+    const { PlatformAuthFactory } = require('../utils/platformAuth');
+    const platform = PlatformAuthFactory.detectPlatform(req);
+    
+    // 使用新的getSession方法（支持多平台）
+    const sessionInfo = await authService.getSession(code, platform);
     return success(res, sessionInfo);
   } catch (err) {
     next(err);

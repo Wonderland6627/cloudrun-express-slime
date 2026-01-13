@@ -1,0 +1,199 @@
+// 平台认证抽象层 - 支持微信、抖音、B站等不同平台
+const axios = require('axios');
+
+// 平台类型枚举
+const PLATFORM_TYPES = {
+  WECHAT: 'wechat',
+  DOUYIN: 'douyin',
+  BILIBILI: 'bilibili',
+  TEST: 'test' // 测试模式
+};
+
+/**
+ * 微信平台认证
+ */
+class WeChatAuth {
+  constructor() {
+    this.platform = PLATFORM_TYPES.WECHAT;
+  }
+  
+  /**
+   * 通过code获取session信息
+   * @param {string} code - 微信登录凭证code
+   * @returns {Promise<Object>} {openid, session_key, unionid}
+   */
+  async code2Session(code) {
+    const appid = process.env.WX_APPID;
+    const secret = process.env.WX_SECRET;
+    
+    if (!appid || !secret) {
+      throw new Error('WX_APPID and WX_SECRET environment variables are required');
+    }
+    
+    const url = `https://api.weixin.qq.com/sns/jscode2session?appid=${appid}&secret=${secret}&js_code=${code}&grant_type=authorization_code`;
+    
+    try {
+      const response = await axios.get(url);
+      const data = response.data;
+      
+      if (data.errcode) {
+        throw new Error(`WeChat API Error: ${data.errcode} - ${data.errmsg}`);
+      }
+      
+      return {
+        openid: data.openid,
+        session_key: data.session_key,
+        unionid: data.unionid || null,
+        platform: this.platform
+      };
+    } catch (error) {
+      console.error('WeChat code2Session error:', error.message);
+      throw error;
+    }
+  }
+  
+  /**
+   * 验证session_key（可选，用于额外验证）
+   * @param {string} openid - 用户openid
+   * @param {string} session_key - session_key
+   * @returns {Promise<boolean>} 验证结果
+   */
+  async verifySession(openid, session_key) {
+    // 微信小游戏通常不需要额外验证session_key
+    // 这里可以扩展实现签名验证等
+    return true;
+  }
+}
+
+/**
+ * 抖音平台认证（预留接口）
+ */
+class DouYinAuth {
+  constructor() {
+    this.platform = PLATFORM_TYPES.DOUYIN;
+  }
+  
+  async code2Session(code) {
+    // TODO: 实现抖音登录逻辑
+    throw new Error('DouYin authentication not implemented yet');
+  }
+  
+  async verifySession(openid, session_key) {
+    // TODO: 实现抖音session验证
+    return true;
+  }
+}
+
+/**
+ * B站平台认证（预留接口）
+ */
+class BilibiliAuth {
+  constructor() {
+    this.platform = PLATFORM_TYPES.BILIBILI;
+  }
+  
+  async code2Session(code) {
+    // TODO: 实现B站登录逻辑
+    throw new Error('Bilibili authentication not implemented yet');
+  }
+  
+  async verifySession(openid, session_key) {
+    // TODO: 实现B站session验证
+    return true;
+  }
+}
+
+/**
+ * 测试模式认证（用于编辑器或测试环境）
+ */
+class TestAuth {
+  constructor() {
+    this.platform = PLATFORM_TYPES.TEST;
+  }
+  
+  async code2Session(code) {
+    // 测试模式：使用固定的测试openid
+    const testOpenid = process.env.TEST_OPENID || `test_openid_${Date.now()}`;
+    return {
+      openid: testOpenid,
+      session_key: 'test_session_key',
+      unionid: null,
+      platform: this.platform
+    };
+  }
+  
+  async verifySession(openid, session_key) {
+    // 测试模式总是返回true
+    return true;
+  }
+}
+
+/**
+ * 平台认证工厂
+ */
+class PlatformAuthFactory {
+  /**
+   * 根据平台类型获取认证实例
+   * @param {string} platform - 平台类型
+   * @returns {Object} 认证实例
+   */
+  static getAuthInstance(platform) {
+    switch (platform) {
+      case PLATFORM_TYPES.WECHAT:
+        return new WeChatAuth();
+      case PLATFORM_TYPES.DOUYIN:
+        return new DouYinAuth();
+      case PLATFORM_TYPES.BILIBILI:
+        return new BilibiliAuth();
+      case PLATFORM_TYPES.TEST:
+        return new TestAuth();
+      default:
+        // 默认使用微信
+        return new WeChatAuth();
+    }
+  }
+  
+  /**
+   * 从请求中检测平台类型
+   * @param {Object} req - Express请求对象
+   * @returns {string} 平台类型
+   */
+  static detectPlatform(req) {
+    // 从header获取
+    if (req.headers['x-platform']) {
+      return req.headers['x-platform'].toLowerCase();
+    }
+    
+    // 从body获取
+    if (req.body && req.body.platform) {
+      return req.body.platform.toLowerCase();
+    }
+    
+    // 从query获取
+    if (req.query && req.query.platform) {
+      return req.query.platform.toLowerCase();
+    }
+    
+    // 检查是否为测试模式
+    if (process.env.NODE_ENV === 'development' || process.env.ENABLE_TEST_MODE === 'true') {
+      // 检查是否有测试token
+      const testToken = req.headers['x-test-token'] || req.body?.testToken;
+      if (testToken === process.env.TEST_TOKEN || process.env.TEST_TOKEN === 'any') {
+        return PLATFORM_TYPES.TEST;
+      }
+    }
+    
+    // 默认返回微信平台
+    return PLATFORM_TYPES.WECHAT;
+  }
+}
+
+module.exports = {
+  PlatformAuthFactory,
+  PLATFORM_TYPES,
+  WeChatAuth,
+  DouYinAuth,
+  BilibiliAuth,
+  TestAuth
+};
+

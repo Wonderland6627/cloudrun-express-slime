@@ -23,31 +23,75 @@ npm start
 
 ### 2. 测试接口
 
-#### 测试1：获取微信用户信息（需要真实的code）
+#### 测试1：获取用户Token（登录）
+
+**方式A：使用测试模式（推荐用于开发测试）**
+
+首先在 `.env` 文件中设置：
+```bash
+ENABLE_TEST_MODE=true
+TEST_TOKEN=any
+```
+
+然后测试：
+```bash
+# 测试模式登录（无需真实code）
+curl -X POST http://localhost:3000/api/minigame/getCode2Session \
+  -H "Content-Type: application/json" \
+  -H "x-platform: test" \
+  -d "{\"code\":\"test_code\"}"
+```
+
+**方式B：使用真实微信code（生产环境）**
 
 ```bash
 # 注意：这个接口需要真实的微信登录code，可以从微信小程序获取
 curl -X POST http://localhost:3000/api/minigame/getCode2Session \
   -H "Content-Type: application/json" \
-  -d "{\"code\":\"YOUR_WECHAT_CODE\"}"
+  -d "{\"code\":\"YOUR_WECHAT_CODE\",\"platform\":\"wechat\"}"
 ```
 
-#### 测试2：获取用户游戏信息
+**响应示例：**
+```json
+{
+  "code": 0,
+  "data": {
+    "openid": "user_openid",
+    "platform": "wechat",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "session_key": "session_key"
+  },
+  "msg": "success"
+}
+```
+
+#### 测试2：使用Token访问API（推荐方式）
 
 ```bash
+# 使用Authorization Header（推荐）
 curl -X POST http://localhost:3000/api/minigame/getUserGameInfoV2 \
   -H "Content-Type: application/json" \
-  -H "x-openid: test123" \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE" \
+  -d "{}"
+
+# 或使用自定义Header
+curl -X POST http://localhost:3000/api/minigame/getUserGameInfoV2 \
+  -H "Content-Type: application/json" \
+  -H "x-auth-token: YOUR_TOKEN_HERE" \
   -d "{}"
 ```
 
-或者使用body传递openid：
+#### 测试3：使用测试模式访问API（开发环境）
 
 ```bash
+# 在开发环境启用测试模式后，可以使用测试token
 curl -X POST http://localhost:3000/api/minigame/getUserGameInfoV2 \
   -H "Content-Type: application/json" \
-  -d "{\"openid\":\"test123\"}"
+  -H "x-test-token: any" \
+  -H "x-test-openid: test123" \
+  -d "{}"
 ```
+
 
 **预期响应：**
 ```json
@@ -67,12 +111,20 @@ curl -X POST http://localhost:3000/api/minigame/getUserGameInfoV2 \
 }
 ```
 
-#### 测试3：设置用户游戏信息
+#### 测试5：设置用户游戏信息
 
 ```bash
+# 使用Token（推荐）
 curl -X POST http://localhost:3000/api/minigame/setUserGameInfoV2 \
   -H "Content-Type: application/json" \
-  -H "x-openid: test123" \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE" \
+  -d "{\"progressLevelID\":5,\"nickName\":\"测试玩家\",\"avatarUrl\":\"https://example.com/avatar.jpg\"}"
+
+# 或使用测试模式
+curl -X POST http://localhost:3000/api/minigame/setUserGameInfoV2 \
+  -H "Content-Type: application/json" \
+  -H "x-test-token: any" \
+  -H "x-test-openid: test123" \
   -d "{\"progressLevelID\":5,\"nickName\":\"测试玩家\",\"avatarUrl\":\"https://example.com/avatar.jpg\"}"
 ```
 
@@ -91,28 +143,37 @@ curl -X POST http://localhost:3000/api/minigame/setUserGameInfoV2 \
 }
 ```
 
-#### 测试4：再次获取用户信息（验证数据已保存）
+#### 测试6：再次获取用户信息（验证数据已保存）
 
 ```bash
+# 使用Token
 curl -X POST http://localhost:3000/api/minigame/getUserGameInfoV2 \
   -H "Content-Type: application/json" \
-  -H "x-openid: test123" \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE" \
   -d "{}"
 ```
 
 这次应该返回刚才设置的数据。
 
-#### 测试5：获取排行榜
+#### 测试7：获取排行榜
 
 ```bash
+# 排行榜是可选认证，可以不传token
 curl -X POST http://localhost:3000/api/minigame/getUserRankListV2 \
   -H "Content-Type: application/json" \
   -d "{\"limit\":10}"
+
+# 或使用token（会显示用户排名）
+curl -X POST http://localhost:3000/api/minigame/getUserRankListV2 \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE" \
+  -d "{\"limit\":10}"
 ```
 
-#### 测试6：获取关卡配置
+#### 测试8：获取关卡配置
 
 ```bash
+# 关卡配置是可选认证
 curl -X POST http://localhost:3000/api/minigame/getLevelsConfigV2 \
   -H "Content-Type: application/json" \
   -d "{}"
@@ -130,7 +191,8 @@ curl -X POST http://localhost:3000/api/minigame/getLevelsConfigV2 \
    - **URL**: `http://localhost:3000/api/minigame/getUserGameInfoV2`
    - **Headers**: 
      - `Content-Type: application/json`
-     - `x-openid: test123`
+     - `Authorization: Bearer YOUR_TOKEN_HERE` （推荐）
+     - 或 `x-test-token: any` + `x-test-openid: test123` （测试模式）
    - **Body** (选择raw, JSON格式):
      ```json
      {}
@@ -143,27 +205,38 @@ curl -X POST http://localhost:3000/api/minigame/getLevelsConfigV2 \
 以下是一个完整的测试流程，模拟真实使用场景：
 
 ```bash
-# 1. 创建用户并设置游戏信息
+# 1. 获取Token（登录）
+TOKEN1=$(curl -s -X POST http://localhost:3000/api/minigame/getCode2Session \
+  -H "Content-Type: application/json" \
+  -H "x-platform: test" \
+  -d '{"code":"test_code_001"}' | jq -r '.data.token')
+
+TOKEN2=$(curl -s -X POST http://localhost:3000/api/minigame/getCode2Session \
+  -H "Content-Type: application/json" \
+  -H "x-platform: test" \
+  -d '{"code":"test_code_002"}' | jq -r '.data.token')
+
+# 2. 创建用户并设置游戏信息（使用Token）
 curl -X POST http://localhost:3000/api/minigame/setUserGameInfoV2 \
   -H "Content-Type: application/json" \
-  -H "x-openid: player001" \
-  -d "{\"progressLevelID\":10,\"nickName\":\"玩家1\"}"
+  -H "Authorization: Bearer $TOKEN1" \
+  -d '{"progressLevelID":10,"nickName":"玩家1"}'
 
-# 2. 创建另一个用户
+# 3. 创建另一个用户
 curl -X POST http://localhost:3000/api/minigame/setUserGameInfoV2 \
   -H "Content-Type: application/json" \
-  -H "x-openid: player002" \
-  -d "{\"progressLevelID\":20,\"nickName\":\"玩家2\"}"
+  -H "Authorization: Bearer $TOKEN2" \
+  -d '{"progressLevelID":20,"nickName":"玩家2"}'
 
-# 3. 获取排行榜（应该能看到这两个玩家）
+# 4. 获取排行榜（应该能看到这两个玩家）
 curl -X POST http://localhost:3000/api/minigame/getUserRankListV2 \
   -H "Content-Type: application/json" \
   -d "{}"
 
-# 4. 获取玩家1的信息
+# 5. 获取玩家1的信息
 curl -X POST http://localhost:3000/api/minigame/getUserGameInfoV2 \
   -H "Content-Type: application/json" \
-  -H "x-openid: player001" \
+  -H "Authorization: Bearer $TOKEN1" \
   -d "{}"
 ```
 
@@ -284,23 +357,40 @@ curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api
 测试错误情况，确保接口能正确处理：
 
 ```bash
-# 测试缺少openid的情况
+# 测试缺少认证信息的情况（生产环境）
 curl -X POST http://localhost:3000/api/minigame/getUserGameInfoV2 \
   -H "Content-Type: application/json" \
   -d "{}"
 
 # 预期响应：
 # {
-#   "code": -1,
-#   "msg": "openid is required"
+#   "code": -2,
+#   "msg": "Authentication required. Please provide a valid token or enable test mode."
 # }
+
+# 测试无效token的情况
+curl -X POST http://localhost:3000/api/minigame/getUserGameInfoV2 \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer invalid_token" \
+  -d "{}"
+
+# 预期响应：同样返回认证错误
 ```
 
 ## 注意事项
 
 1. **数据库配置**：确保已配置 `TCB_ENV` 环境变量，指向正确的云开发环境
-2. **微信code**：`getCode2Session` 接口需要真实的微信登录code，测试时可能无法使用
-3. **跨域问题**：如果从浏览器直接调用，可能遇到跨域问题，需要配置CORS
+2. **认证配置**：
+   - 开发环境：设置 `ENABLE_TEST_MODE=true` 和 `TEST_TOKEN=any` 启用测试模式
+   - 生产环境：必须使用真实的token，禁用测试模式
+3. **Token管理**：客户端需要保存token并在后续请求中携带，token有效期为7天
+4. **微信code**：`getCode2Session` 接口需要真实的微信登录code，测试时可以使用测试模式
+5. **跨域问题**：如果从浏览器直接调用，可能遇到跨域问题，需要配置CORS
+6. **仅支持Token认证**：系统仅支持token认证和测试模式，不再支持直接传递openid
+
+## 认证系统详细说明
+
+更多关于认证系统的使用说明，请参考：[认证系统使用指南](./AUTH_GUIDE.md)
 
 ## 下一步
 
