@@ -51,17 +51,16 @@ router.post('/setUserGameInfoV2',
  * 获取排行榜（V2版本）
  */
 router.post('/getUserRankListV2',
-  optionalAuthMiddleware, // openid可选
+  authMiddleware,
   minigameController.getUserRankList
 );
 
 /**
  * POST /api/minigame/getLevelsConfigV2
  * 获取关卡配置（V2版本）
- * 注意：配置信息可能需要认证，使用可选认证中间件
  */
 router.post('/getLevelsConfigV2',
-  optionalAuthMiddleware, // 可选认证，用于记录用户访问
+  authMiddleware,
   minigameController.getLevelsConfig
 );
 

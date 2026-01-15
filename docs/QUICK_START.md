@@ -25,10 +25,15 @@ npm start
 打开新的终端窗口，运行：
 
 ```bash
-# 测试获取用户信息（会自动创建空记录）
+# 1. 先获取token（测试环境使用Editor平台）
+TOKEN=$(curl -s -X POST http://localhost:3000/api/minigame/getCode2Session \
+  -H "Content-Type: application/json" \
+  -d '{"platform":"Editor","code":"test_code"}' | jq -r '.data.token')
+
+# 2. 使用token访问接口
 curl -X POST http://localhost:3000/api/minigame/getUserGameInfoV2 \
   -H "Content-Type: application/json" \
-  -H "x-openid: test123" \
+  -H "Authorization: Bearer $TOKEN" \
   -d "{}"
 ```
 

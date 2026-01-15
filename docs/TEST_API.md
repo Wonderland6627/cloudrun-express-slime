@@ -25,21 +25,19 @@ npm start
 
 #### 测试1：获取用户Token（登录）
 
-**方式A：使用测试模式（推荐用于开发测试）**
+**方式A：使用Editor平台测试模式（推荐用于开发测试）**
 
 首先在 `.env` 文件中设置：
 ```bash
 ENABLE_TEST_MODE=true
-TEST_TOKEN=any
 ```
 
 然后测试：
 ```bash
-# 测试模式登录（无需真实code）
+# Editor平台测试模式（无需真实code，code可以是任意值）
 curl -X POST http://localhost:3000/api/minigame/getCode2Session \
   -H "Content-Type: application/json" \
-  -H "x-platform: test" \
-  -d "{\"code\":\"test_code\"}"
+  -d "{\"platform\":\"Editor\",\"code\":\"any_code_here\"}"
 ```
 
 **方式B：使用真实微信code（生产环境）**
@@ -81,14 +79,18 @@ curl -X POST http://localhost:3000/api/minigame/getUserGameInfoV2 \
   -d "{}"
 ```
 
-#### 测试3：使用测试模式访问API（开发环境）
+#### 测试3：完整测试流程（Editor平台）
 
 ```bash
-# 在开发环境启用测试模式后，可以使用测试token
+# 1. 先获取token（Editor平台，测试模式）
+TOKEN=$(curl -s -X POST http://localhost:3000/api/minigame/getCode2Session \
+  -H "Content-Type: application/json" \
+  -d '{"platform":"Editor","code":"test_code"}' | jq -r '.data.token')
+
+# 2. 使用token访问接口
 curl -X POST http://localhost:3000/api/minigame/getUserGameInfoV2 \
   -H "Content-Type: application/json" \
-  -H "x-test-token: any" \
-  -H "x-test-openid: test123" \
+  -H "Authorization: Bearer $TOKEN" \
   -d "{}"
 ```
 
@@ -114,17 +116,10 @@ curl -X POST http://localhost:3000/api/minigame/getUserGameInfoV2 \
 #### 测试5：设置用户游戏信息
 
 ```bash
-# 使用Token（推荐）
+# 使用Token（必须先获取token）
 curl -X POST http://localhost:3000/api/minigame/setUserGameInfoV2 \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN_HERE" \
-  -d "{\"progressLevelID\":5,\"nickName\":\"测试玩家\",\"avatarUrl\":\"https://example.com/avatar.jpg\"}"
-
-# 或使用测试模式
-curl -X POST http://localhost:3000/api/minigame/setUserGameInfoV2 \
-  -H "Content-Type: application/json" \
-  -H "x-test-token: any" \
-  -H "x-test-openid: test123" \
   -d "{\"progressLevelID\":5,\"nickName\":\"测试玩家\",\"avatarUrl\":\"https://example.com/avatar.jpg\"}"
 ```
 
@@ -158,12 +153,7 @@ curl -X POST http://localhost:3000/api/minigame/getUserGameInfoV2 \
 #### 测试7：获取排行榜
 
 ```bash
-# 排行榜是可选认证，可以不传token
-curl -X POST http://localhost:3000/api/minigame/getUserRankListV2 \
-  -H "Content-Type: application/json" \
-  -d "{\"limit\":10}"
-
-# 或使用token（会显示用户排名）
+# 排行榜需要token认证
 curl -X POST http://localhost:3000/api/minigame/getUserRankListV2 \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN_HERE" \
@@ -173,9 +163,10 @@ curl -X POST http://localhost:3000/api/minigame/getUserRankListV2 \
 #### 测试8：获取关卡配置
 
 ```bash
-# 关卡配置是可选认证
+# 关卡配置需要token认证
 curl -X POST http://localhost:3000/api/minigame/getLevelsConfigV2 \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE" \
   -d "{}"
 ```
 
@@ -191,8 +182,7 @@ curl -X POST http://localhost:3000/api/minigame/getLevelsConfigV2 \
    - **URL**: `http://localhost:3000/api/minigame/getUserGameInfoV2`
    - **Headers**: 
      - `Content-Type: application/json`
-     - `Authorization: Bearer YOUR_TOKEN_HERE` （推荐）
-     - 或 `x-test-token: any` + `x-test-openid: test123` （测试模式）
+     - `Authorization: Bearer YOUR_TOKEN_HERE` （必需，先通过getCode2Session获取token）
    - **Body** (选择raw, JSON格式):
      ```json
      {}
@@ -205,16 +195,14 @@ curl -X POST http://localhost:3000/api/minigame/getLevelsConfigV2 \
 以下是一个完整的测试流程，模拟真实使用场景：
 
 ```bash
-# 1. 获取Token（登录）
+# 1. 获取Token（登录）- 使用Editor平台测试模式
 TOKEN1=$(curl -s -X POST http://localhost:3000/api/minigame/getCode2Session \
   -H "Content-Type: application/json" \
-  -H "x-platform: test" \
-  -d '{"code":"test_code_001"}' | jq -r '.data.token')
+  -d '{"platform":"Editor","code":"test_code_001"}' | jq -r '.data.token')
 
 TOKEN2=$(curl -s -X POST http://localhost:3000/api/minigame/getCode2Session \
   -H "Content-Type: application/json" \
-  -H "x-platform: test" \
-  -d '{"code":"test_code_002"}' | jq -r '.data.token')
+  -d '{"platform":"Editor","code":"test_code_002"}' | jq -r '.data.token')
 
 # 2. 创建用户并设置游戏信息（使用Token）
 curl -X POST http://localhost:3000/api/minigame/setUserGameInfoV2 \
@@ -228,10 +216,11 @@ curl -X POST http://localhost:3000/api/minigame/setUserGameInfoV2 \
   -H "Authorization: Bearer $TOKEN2" \
   -d '{"progressLevelID":20,"nickName":"玩家2"}'
 
-# 4. 获取排行榜（应该能看到这两个玩家）
+# 4. 获取排行榜（应该能看到这两个玩家，需要token）
 curl -X POST http://localhost:3000/api/minigame/getUserRankListV2 \
   -H "Content-Type: application/json" \
-  -d "{}"
+  -H "Authorization: Bearer $TOKEN1" \
+  -d "{\"limit\":10}"
 
 # 5. 获取玩家1的信息
 curl -X POST http://localhost:3000/api/minigame/getUserGameInfoV2 \
@@ -249,39 +238,37 @@ curl -X POST http://localhost:3000/api/minigame/getUserGameInfoV2 \
 #### Windows PowerShell 版本：
 
 ```powershell
-# 测试1: 获取用户游戏信息
-curl.exe -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserGameInfoV2 -H "Content-Type: application/json" -H "x-openid: test123" -d "{}"
+# 注意：所有接口都需要先获取token，生产环境使用真实微信code，测试环境使用Editor平台
 
-# 测试2: 设置用户游戏信息
-curl.exe -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/setUserGameInfoV2 -H "Content-Type: application/json" -H "x-openid: test123" -d "{\"progressLevelID\":5,\"nickName\":\"测试玩家\",\"avatarUrl\":\"https://example.com/avatar.jpg\"}"
+# 步骤1: 获取token（生产环境使用真实微信code）
+$TOKEN = (curl.exe -s -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getCode2Session -H "Content-Type: application/json" -d "{\"platform\":\"wechat\",\"code\":\"YOUR_WECHAT_CODE\"}" | ConvertFrom-Json).data.token
 
-# 测试3: 获取排行榜
-curl.exe -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserRankListV2 -H "Content-Type: application/json" -d "{\"limit\":10}"
+# 步骤2: 使用token访问接口
+curl.exe -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserGameInfoV2 -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d "{}"
 
-# 测试4: 获取关卡配置
-curl.exe -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getLevelsConfigV2 -H "Content-Type: application/json" -d "{}"
+curl.exe -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/setUserGameInfoV2 -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d "{\"progressLevelID\":5,\"nickName\":\"测试玩家\",\"avatarUrl\":\"https://example.com/avatar.jpg\"}"
 
-# 测试5: 获取用户信息（使用body传递openid）
-curl.exe -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserGameInfoV2 -H "Content-Type: application/json" -d "{\"openid\":\"test123\"}"
+curl.exe -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserRankListV2 -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d "{\"limit\":10}"
+
+curl.exe -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getLevelsConfigV2 -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d "{}"
 ```
 
 #### Linux/Mac 版本：
 
 ```bash
-# 测试1: 获取用户游戏信息
-curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserGameInfoV2 -H "Content-Type: application/json" -H "x-openid: test123" -d "{}"
+# 注意：所有接口都需要先获取token，生产环境使用真实微信code，测试环境使用Editor平台
 
-# 测试2: 设置用户游戏信息
-curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/setUserGameInfoV2 -H "Content-Type: application/json" -H "x-openid: test123" -d '{"progressLevelID":5,"nickName":"测试玩家","avatarUrl":"https://example.com/avatar.jpg"}'
+# 步骤1: 获取token（生产环境使用真实微信code）
+TOKEN=$(curl -s -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getCode2Session -H "Content-Type: application/json" -d '{"platform":"wechat","code":"YOUR_WECHAT_CODE"}' | jq -r '.data.token')
 
-# 测试3: 获取排行榜
-curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserRankListV2 -H "Content-Type: application/json" -d '{"limit":10}'
+# 步骤2: 使用token访问接口
+curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserGameInfoV2 -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d "{}"
 
-# 测试4: 获取关卡配置
-curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getLevelsConfigV2 -H "Content-Type: application/json" -d "{}"
+curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/setUserGameInfoV2 -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"progressLevelID":5,"nickName":"测试玩家","avatarUrl":"https://example.com/avatar.jpg"}'
 
-# 测试5: 获取用户信息（使用body传递openid）
-curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserGameInfoV2 -H "Content-Type: application/json" -d '{"openid":"test123"}'
+curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserRankListV2 -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"limit":10}'
+
+curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getLevelsConfigV2 -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d "{}"
 ```
 
 ### 📋 完整测试流程（按顺序执行）
@@ -289,33 +276,41 @@ curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api
 #### Windows PowerShell：
 
 ```powershell
-# 步骤1: 创建用户并设置游戏信息
-curl.exe -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/setUserGameInfoV2 -H "Content-Type: application/json" -H "x-openid: player001" -d "{\"progressLevelID\":10,\"nickName\":\"玩家1\"}"
+# 步骤1: 获取两个用户的token（生产环境使用真实微信code）
+$TOKEN1 = (curl.exe -s -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getCode2Session -H "Content-Type: application/json" -d "{\"platform\":\"wechat\",\"code\":\"CODE1\"}" | ConvertFrom-Json).data.token
+$TOKEN2 = (curl.exe -s -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getCode2Session -H "Content-Type: application/json" -d "{\"platform\":\"wechat\",\"code\":\"CODE2\"}" | ConvertFrom-Json).data.token
 
-# 步骤2: 创建另一个用户
-curl.exe -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/setUserGameInfoV2 -H "Content-Type: application/json" -H "x-openid: player002" -d "{\"progressLevelID\":20,\"nickName\":\"玩家2\"}"
+# 步骤2: 创建用户并设置游戏信息
+curl.exe -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/setUserGameInfoV2 -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN1" -d "{\"progressLevelID\":10,\"nickName\":\"玩家1\"}"
 
-# 步骤3: 获取排行榜（应该能看到这两个玩家）
-curl.exe -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserRankListV2 -H "Content-Type: application/json" -d "{}"
+# 步骤3: 创建另一个用户
+curl.exe -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/setUserGameInfoV2 -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN2" -d "{\"progressLevelID\":20,\"nickName\":\"玩家2\"}"
 
-# 步骤4: 获取玩家1的信息
-curl.exe -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserGameInfoV2 -H "Content-Type: application/json" -H "x-openid: player001" -d "{}"
+# 步骤4: 获取排行榜（应该能看到这两个玩家）
+curl.exe -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserRankListV2 -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN1" -d "{\"limit\":10}"
+
+# 步骤5: 获取玩家1的信息
+curl.exe -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserGameInfoV2 -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN1" -d "{}"
 ```
 
 #### Linux/Mac：
 
 ```bash
-# 步骤1: 创建用户并设置游戏信息
-curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/setUserGameInfoV2 -H "Content-Type: application/json" -H "x-openid: player001" -d '{"progressLevelID":10,"nickName":"玩家1"}'
+# 步骤1: 获取两个用户的token（生产环境使用真实微信code）
+TOKEN1=$(curl -s -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getCode2Session -H "Content-Type: application/json" -d '{"platform":"wechat","code":"CODE1"}' | jq -r '.data.token')
+TOKEN2=$(curl -s -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getCode2Session -H "Content-Type: application/json" -d '{"platform":"wechat","code":"CODE2"}' | jq -r '.data.token')
 
-# 步骤2: 创建另一个用户
-curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/setUserGameInfoV2 -H "Content-Type: application/json" -H "x-openid: player002" -d '{"progressLevelID":20,"nickName":"玩家2"}'
+# 步骤2: 创建用户并设置游戏信息
+curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/setUserGameInfoV2 -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN1" -d '{"progressLevelID":10,"nickName":"玩家1"}'
 
-# 步骤3: 获取排行榜（应该能看到这两个玩家）
-curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserRankListV2 -H "Content-Type: application/json" -d "{}"
+# 步骤3: 创建另一个用户
+curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/setUserGameInfoV2 -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN2" -d '{"progressLevelID":20,"nickName":"玩家2"}'
 
-# 步骤4: 获取玩家1的信息
-curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserGameInfoV2 -H "Content-Type: application/json" -H "x-openid: player001" -d "{}"
+# 步骤4: 获取排行榜（应该能看到这两个玩家）
+curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserRankListV2 -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN1" -d '{"limit":10}'
+
+# 步骤5: 获取玩家1的信息
+curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserGameInfoV2 -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN1" -d "{}"
 ```
 
 ### 🔍 预期响应示例
@@ -345,7 +340,7 @@ curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api
 3. **URL**: `https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/minigame/getUserGameInfoV2`
 4. **Headers**: 
    - `Content-Type: application/json`
-   - `x-openid: test123`
+   - `Authorization: Bearer YOUR_TOKEN_HERE` （先通过getCode2Session获取token）
 5. **Body** (raw, JSON):
    ```json
    {}
@@ -365,7 +360,7 @@ curl -X POST http://localhost:3000/api/minigame/getUserGameInfoV2 \
 # 预期响应：
 # {
 #   "code": -2,
-#   "msg": "Authentication required. Please provide a valid token or enable test mode."
+#   "msg": "Authentication required. Please provide a valid token."
 # }
 
 # 测试无效token的情况
@@ -381,12 +376,12 @@ curl -X POST http://localhost:3000/api/minigame/getUserGameInfoV2 \
 
 1. **数据库配置**：确保已配置 `TCB_ENV` 环境变量，指向正确的云开发环境
 2. **认证配置**：
-   - 开发环境：设置 `ENABLE_TEST_MODE=true` 和 `TEST_TOKEN=any` 启用测试模式
-   - 生产环境：必须使用真实的token，禁用测试模式
+   - 开发环境：设置 `ENABLE_TEST_MODE=true`，使用 `platform="Editor"` 获取测试token
+   - 生产环境：必须使用真实的微信code获取token，设置 `ENABLE_TEST_MODE=false`
 3. **Token管理**：客户端需要保存token并在后续请求中携带，token有效期为7天
-4. **微信code**：`getCode2Session` 接口需要真实的微信登录code，测试时可以使用测试模式
+4. **Editor平台**：测试环境下，使用 `platform="Editor"` 和任意code即可获取token，无需真实微信code
 5. **跨域问题**：如果从浏览器直接调用，可能遇到跨域问题，需要配置CORS
-6. **仅支持Token认证**：系统仅支持token认证和测试模式，不再支持直接传递openid
+6. **统一Token认证**：所有接口都必须使用token认证，无法绕过
 
 ## 认证系统详细说明
 

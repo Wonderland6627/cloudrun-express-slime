@@ -67,42 +67,58 @@ Content-Type: application/json
 GET /api/minigame/getUserGameInfoV2?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
-## 测试模式
+## 测试模式（Editor平台）
 
-为了支持编辑器或测试环境，系统提供了测试模式：
+为了支持Unity编辑器或测试环境，系统提供了Editor平台测试模式：
 
 ### 启用测试模式
 
 设置环境变量：
 ```bash
 ENABLE_TEST_MODE=true
-TEST_TOKEN=your_test_token  # 或设置为 "any" 允许任意token
+TEST_OPENID=editor_test_user  # 可选，不设置则自动生成
 ```
 
 ### 使用测试模式
 
-**方式1：使用测试Token**
+**获取测试token**：
 ```bash
-POST /api/minigame/getUserGameInfoV2
-x-test-token: your_test_token
-x-test-openid: test_user_123
+POST /api/minigame/getCode2Session
 Content-Type: application/json
+
+{
+  "platform": "Editor",
+  "code": "any_code_here"  # code可以是任意值
+}
 ```
 
-**方式2：在Body中传递**
+**响应示例**：
 ```json
 {
-  "testToken": "your_test_token",
-  "testOpenid": "test_user_123"
+  "code": 0,
+  "data": {
+    "openid": "editor_test_user",
+    "platform": "editor",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "session_key": "editor_test_session_key"
+  },
+  "msg": "success"
 }
+```
+
+**使用token访问接口**：
+```bash
+POST /api/minigame/getUserGameInfoV2
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
 ```
 
 ### 测试模式特点
 
-- 无需真实的code和token
-- 可以自定义testOpenid
-- 所有认证检查都会通过
-- 仅在生产环境禁用（除非明确启用）
+- 无需真实的微信code，code可以是任意值
+- 测试环境需要设置 `ENABLE_TEST_MODE=true`
+- 生产环境设置 `ENABLE_TEST_MODE=false` 时，Editor平台不可用
+- 所有接口都需要使用token认证，无法绕过
 
 ## 平台支持
 
@@ -159,8 +175,7 @@ WX_SECRET=your_wechat_secret
 ```bash
 # 测试模式
 ENABLE_TEST_MODE=false          # 是否启用测试模式
-TEST_TOKEN=any                  # 测试token，设置为"any"允许任意token
-TEST_OPENID=test_user           # 默认测试openid
+TEST_OPENID=editor_test_user    # 默认测试openid（可选）
 
 ```
 
@@ -172,8 +187,8 @@ TEST_OPENID=test_user           # 默认测试openid
 | `/api/minigame/getUserWXContext` | 必需 | 需要token或测试模式 |
 | `/api/minigame/getUserGameInfoV2` | 必需 | 需要token或测试模式 |
 | `/api/minigame/setUserGameInfoV2` | 必需 | 需要token或测试模式 |
-| `/api/minigame/getUserRankListV2` | 可选 | 有token会显示用户排名 |
-| `/api/minigame/getLevelsConfigV2` | 可选 | 配置信息，可选认证 |
+| `/api/minigame/getUserRankListV2` | 必需 | 需要token认证 |
+| `/api/minigame/getLevelsConfigV2` | 必需 | 需要token认证 |
 
 ## 安全建议
 
@@ -215,7 +230,7 @@ class NewPlatformAuth {
 A: 客户端需要重新调用 `getCode2Session` 获取新token。
 
 ### Q: 如何在编辑器/测试工具中使用？
-A: 启用测试模式，设置 `ENABLE_TEST_MODE=true` 和 `TEST_TOKEN=any`，然后使用 `x-test-token` header。
+A: 启用测试模式，设置 `ENABLE_TEST_MODE=true`，然后使用 `platform="Editor"` 调用 `getCode2Session` 获取测试token，之后使用token访问其他接口。
 
 ### Q: 可以同时支持多个平台吗？
 A: 可以，系统会根据请求中的 `platform` 参数自动选择对应的认证方式。

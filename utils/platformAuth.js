@@ -6,7 +6,7 @@ const PLATFORM_TYPES = {
   WECHAT: 'wechat',
   DOUYIN: 'douyin',
   BILIBILI: 'bilibili',
-  TEST: 'test' // 测试模式
+  EDITOR: 'editor' // Unity编辑器平台（测试模式）
 };
 
 /**
@@ -104,19 +104,21 @@ class BilibiliAuth {
 }
 
 /**
- * 测试模式认证（用于编辑器或测试环境）
+ * Unity编辑器平台认证（测试模式）
+ * 当ENABLE_TEST_MODE=true时，允许使用任意code获取token
  */
-class TestAuth {
+class EditorAuth {
   constructor() {
-    this.platform = PLATFORM_TYPES.TEST;
+    this.platform = PLATFORM_TYPES.EDITOR;
   }
   
   async code2Session(code) {
     // 测试模式：使用固定的测试openid
-    const testOpenid = process.env.TEST_OPENID || `test_openid_${Date.now()}`;
+    // code可以是任意值，不做验证
+    const testOpenid = process.env.TEST_OPENID || `editor_test_${Date.now()}`;
     return {
       openid: testOpenid,
-      session_key: 'test_session_key',
+      session_key: 'editor_test_session_key',
       unionid: null,
       platform: this.platform
     };
@@ -145,8 +147,8 @@ class PlatformAuthFactory {
         return new DouYinAuth();
       case PLATFORM_TYPES.BILIBILI:
         return new BilibiliAuth();
-      case PLATFORM_TYPES.TEST:
-        return new TestAuth();
+      case PLATFORM_TYPES.EDITOR:
+        return new EditorAuth();
       default:
         // 默认使用微信
         return new WeChatAuth();
@@ -157,30 +159,35 @@ class PlatformAuthFactory {
    * 从请求中检测平台类型
    * @param {Object} req - Express请求对象
    * @returns {string} 平台类型
+   * @throws {Error} 当Editor平台在测试模式未启用时
    */
   static detectPlatform(req) {
+    let platform = null;
+    
     // 从header获取
     if (req.headers['x-platform']) {
-      return req.headers['x-platform'].toLowerCase();
+      platform = req.headers['x-platform'].toLowerCase();
     }
-    
     // 从body获取
-    if (req.body && req.body.platform) {
-      return req.body.platform.toLowerCase();
+    else if (req.body && req.body.platform) {
+      platform = req.body.platform.toLowerCase();
     }
-    
     // 从query获取
-    if (req.query && req.query.platform) {
-      return req.query.platform.toLowerCase();
+    else if (req.query && req.query.platform) {
+      platform = req.query.platform.toLowerCase();
     }
     
-    // 检查是否为测试模式
-    if (process.env.NODE_ENV === 'development' || process.env.ENABLE_TEST_MODE === 'true') {
-      // 检查是否有测试token
-      const testToken = req.headers['x-test-token'] || req.body?.testToken;
-      if (testToken === process.env.TEST_TOKEN || process.env.TEST_TOKEN === 'any') {
-        return PLATFORM_TYPES.TEST;
+    // 检查Editor平台是否允许（需要测试模式开关）
+    if (platform === PLATFORM_TYPES.EDITOR) {
+      if (process.env.ENABLE_TEST_MODE !== 'true') {
+        throw new Error('Editor platform is only available for local test');
       }
+      return PLATFORM_TYPES.EDITOR;
+    }
+    
+    // 如果找到了平台类型，直接返回
+    if (platform) {
+      return platform;
     }
     
     // 默认返回微信平台
@@ -194,6 +201,6 @@ module.exports = {
   WeChatAuth,
   DouYinAuth,
   BilibiliAuth,
-  TestAuth
+  EditorAuth
 };
 
