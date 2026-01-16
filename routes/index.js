@@ -19,4 +19,15 @@ router.get('/api/version', function(req, res, next) {
   });
 });
 
+/**
+ * GET /health
+ * 健康检查端点（用于云托管健康检查）
+ */
+router.get('/health', function(req, res, next) {
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString()
+  });
+});
+
 module.exports = router;
