@@ -115,7 +115,7 @@ class EditorAuth {
   async code2Session(code) {
     // 测试模式：使用固定的测试openid
     // code可以是任意值，不做验证
-    const testOpenid = process.env.TEST_OPENID || `editor_test_${Date.now()}`;
+    const testOpenid = process.env.TEST_OPENID || `test_openid_${code}`;
     return {
       openid: testOpenid,
       session_key: 'editor_test_session_key',
