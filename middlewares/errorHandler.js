@@ -1,6 +1,7 @@
 // 统一错误处理中间件
 const { error } = require('./response');
 const { RESPONSE_CODE } = require('../config/constants');
+const { logger } = require('../utils/logger');
 
 /**
  * 自定义错误类
@@ -24,13 +25,17 @@ class AppError extends Error {
  * @param {Function} next - Express next函数
  */
 function errorHandler(err, req, res, next) {
-  // 记录错误日志
-  console.error('Error:', {
+  // 使用 Winston 记录错误日志（包含完整的堆栈跟踪）
+  logger.error('API Error', {
     message: err.message,
     stack: err.stack,
     url: req.url,
     method: req.method,
-    timestamp: new Date().toISOString()
+    ip: req.ip || req.connection.remoteAddress,
+    userAgent: req.get('user-agent'),
+    body: req.body,
+    query: req.query,
+    params: req.params
   });
   
   // 自定义错误
