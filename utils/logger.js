@@ -18,8 +18,9 @@ const DailyRotateFile = require('winston-daily-rotate-file');
 const path = require('path');
 const fs = require('fs');
 
-// 日志根目录
-const LOG_ROOT_DIR = '/app/logs';
+// 日志根目录（相对于工程根目录）
+// 使用 path.join(__dirname, '..') 获取工程根目录，确保在任何环境下都一致
+const LOG_ROOT_DIR = path.join(__dirname, '..', 'logs');
 
 // 确保日志目录存在
 if (!fs.existsSync(LOG_ROOT_DIR)) {

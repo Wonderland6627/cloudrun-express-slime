@@ -287,7 +287,50 @@ class GameService {
 | `datePattern` | `YYYY-MM-DD/[server-]YYYY-MM-DD-HH` | 按日期分目录，每小时切分文件 |
 | `maxSize` | `20m` | 单文件最大 20MB |
 | `maxFiles` | `30d` | 保留 30 天 |
-| `zippedArchive` | `true` | 自动压缩旧日志 |
+| `zippedArchive` | `false` | 不压缩旧日志 |
+
+---
+
+## ☁️ 腾讯云托管日志持久化配置
+
+由于云托管容器重启后文件会丢失，已通过 **CFS 文件存储挂载** 实现日志持久化。
+
+### 挂载配置
+
+| 配置项 | 值 |
+|--------|-----|
+| **云端存储路径** | `/logs-backup` |
+| **实例挂载路径** | `/app/logs` |
+
+### 配置步骤（已完成）
+
+1. 在腾讯云 CloudBase 控制台，进入云托管服务
+2. 选择服务 → 配置 → 存储挂载
+3. 添加挂载：
+   - 挂载类型：CFS 文件存储
+   - 云端路径：`/logs-backup`
+   - 实例挂载路径：`/app/logs`
+4. 保存并重新部署
+
+### 效果
+
+- ✅ 容器内 `/app/logs` 目录的所有日志文件会自动同步到云端 CFS
+- ✅ 容器重启后日志不会丢失
+- ✅ 可在腾讯云 CFS 控制台查看和下载日志文件
+
+### 查看日志
+
+1. 登录 [腾讯云 CFS 控制台](https://console.cloud.tencent.com/cfs)
+2. 找到对应的文件系统
+3. 浏览 `/logs-backup` 目录下的日志文件
+
+```
+/logs-backup/
+└── 2026-01-17/
+    ├── server-2026-01-17-19.log
+    ├── server-2026-01-17-20.log
+    └── server-2026-01-17-21.log
+```
 
 ---
 
