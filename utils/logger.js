@@ -67,8 +67,8 @@ const dailyRotateTransport = new DailyRotateFile({
   // 日期格式：包含目录结构，YYYY-MM-DD 为文件夹，server-YYYY-MM-DD-HH 为文件名
   // 注意：[server-] 用方括号转义，防止被解析为日期格式
   datePattern: 'YYYY-MM-DD/[server-]YYYY-MM-DD-HH',
-  // 自动压缩旧日志
-  zippedArchive: true,
+  // 不压缩旧日志，保持原始 .log 格式
+  zippedArchive: false,
   // 单个文件最大 20MB
   maxSize: '20m',
   // 保留 30 天
