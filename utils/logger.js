@@ -127,6 +127,23 @@ dailyRotateTransport.on('rotate', (oldFilename, newFilename) => {
 });
 
 /**
+ * 获取客户端真实 IP 地址
+ * 去除 IPv6 前缀（::ffff:），返回纯净的 IPv4 地址
+ * @param {Object} req - Express 请求对象
+ * @returns {string} 客户端 IP 地址
+ */
+function getClientIP(req) {
+  let ip = req.ip || req.connection.remoteAddress || '';
+  
+  // 去除 IPv4-mapped IPv6 前缀（::ffff:）
+  if (ip.startsWith('::ffff:')) {
+    ip = ip.substring(7);
+  }
+  
+  return ip;
+}
+
+/**
  * HTTP 请求日志记录器（与 morgan 集成）
  * 
  * 使用方式：在 app.js 中作为 morgan 的 stream 参数
@@ -163,7 +180,7 @@ const httpLogger = {
     logger.http('HTTP Request', {
       method: req.method,
       url: req.originalUrl || req.url,
-      ip: req.ip || req.connection.remoteAddress,
+      ip: getClientIP(req),
       userAgent: req.get('user-agent'),
       query: req.query,
       body: req.body,
