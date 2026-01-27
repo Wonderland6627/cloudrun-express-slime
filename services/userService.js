@@ -10,6 +10,7 @@ const cloudbaseDB = require('../utils/cloudbaseDB');
 async function getUserGameInfo(openid) {
   // 先查询用户是否存在
   let userData = await cloudbaseDB.findUserByOpenID(openid);
+  let isNewRecord = false;
   
   // 业务逻辑：如果不存在，创建空记录
   if (!userData) {
@@ -19,19 +20,8 @@ async function getUserGameInfo(openid) {
       createdAt: now,
       updatedAt: now
     });
+    isNewRecord = true; // 标记为刚创建的新记录
   }
-  
-  // 检查是否是刚创建的空记录
-  // 处理日期字段：数据库可能返回字符串格式，需要转换为Date对象
-  const createdAt = userData.createdAt instanceof Date 
-    ? userData.createdAt 
-    : new Date(userData.createdAt);
-  const updatedAt = userData.updatedAt instanceof Date 
-    ? userData.updatedAt 
-    : new Date(userData.updatedAt);
-  
-  const isNewRecord = userData.createdAt && userData.updatedAt && 
-                     createdAt.getTime() === updatedAt.getTime();
   
   return {
     data: userData,
