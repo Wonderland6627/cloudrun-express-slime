@@ -8,6 +8,7 @@ const { validateCode } = require('../middlewares/validator');
 
 // 控制器
 const minigameController = require('../controllers/minigameController');
+const currencyController = require('../controllers/currencyController');
 
 /**
  * POST /api/minigame/getCode2Session
@@ -62,6 +63,48 @@ router.post('/getUserRankListV2',
 router.post('/getLevelsConfigV2',
   authMiddleware,
   minigameController.getLevelsConfig
+);
+
+/**
+ * POST /api/minigame/addCurrency
+ * 增加用户货币（通用接口，支持多种货币类型）
+ */
+router.post('/addCurrency',
+  authMiddleware,
+  currencyController.addCurrency
+);
+
+/**
+ * POST /api/minigame/deductCurrency
+ * 扣除用户货币（通用接口，支持多种货币类型）
+ */
+router.post('/deductCurrency',
+  authMiddleware,
+  currencyController.deductCurrency
+);
+
+/**
+ * POST /api/minigame/addCoin
+ * 增加用户金币（便捷接口，向后兼容）
+ */
+router.post('/addCoin',
+  authMiddleware,
+  async (req, res, next) => {
+    req.body.currencyType = 'coin';
+    return currencyController.addCurrency(req, res, next);
+  }
+);
+
+/**
+ * POST /api/minigame/deductCoin
+ * 扣除用户金币（便捷接口，向后兼容）
+ */
+router.post('/deductCoin',
+  authMiddleware,
+  async (req, res, next) => {
+    req.body.currencyType = 'coin';
+    return currencyController.deductCurrency(req, res, next);
+  }
 );
 
 module.exports = router;

@@ -154,6 +154,113 @@ async function findUsersByCondition(condition, options = {}) {
   }
 }
 
+// ==================== 货币相关DAO方法（原子操作）====================
+
+/**
+ * 原子操作：增加货币
+ * @param {string} openID - 用户openID
+ * @param {string} currencyType - 货币类型（如：'coin', 'diamond'）
+ * @param {number} amount - 增加的数量（必须 > 0）
+ * @returns {Promise<Object>} 更新后的用户记录
+ */
+async function incrementCurrency(openID, currencyType, amount) {
+  try {
+    const collection = db.collection(COLLECTIONS.USER_GAME_INFOS);
+    const _ = db.command;
+    
+    // 使用原子操作 inc，如果字段不存在会自动初始化为 0 后再增加
+    await collection.where({
+      openID: openID
+    }).update({
+      [currencyType]: _.inc(amount),
+      updatedAt: new Date()
+    });
+    
+    // 返回更新后的数据
+    const updatedResult = await collection.where({
+      openID: openID
+    }).get();
+    
+    if (updatedResult.data && updatedResult.data.length > 0) {
+      return updatedResult.data[0];
+    }
+    
+    throw new Error('User not found after update');
+  } catch (error) {
+    console.error('incrementCurrency error:', error);
+    throw error;
+  }
+}
+
+/**
+ * 原子操作：扣除货币（带余额检查）
+ * @param {string} openID - 用户openID
+ * @param {string} currencyType - 货币类型（如：'coin', 'diamond'）
+ * @param {number} amount - 扣除的数量（必须 > 0）
+ * @returns {Promise<Object>} 更新后的用户记录
+ */
+async function decrementCurrency(openID, currencyType, amount) {
+  try {
+    const collection = db.collection(COLLECTIONS.USER_GAME_INFOS);
+    const _ = db.command;
+    
+    // 先查询用户，检查余额
+    const userData = await findUserByOpenID(openID);
+    if (!userData) {
+      throw new Error('User not found');
+    }
+    
+    // 如果字段不存在，先初始化为 0（懒加载）
+    if (userData[currencyType] === undefined || userData[currencyType] === null) {
+      await collection.where({
+        openID: openID
+      }).update({
+        [currencyType]: 0,
+        updatedAt: new Date()
+      });
+      // 更新本地数据
+      userData[currencyType] = 0;
+    }
+    
+    // 确保字段存在后，检查余额
+    const currentAmount = userData[currencyType] || 0;
+    
+    // 检查余额是否足够
+    if (currentAmount < amount) {
+      throw new Error(`Insufficient ${currencyType}`);
+    }
+    
+    // 使用原子操作 dec 扣除（通过 inc 负数实现）
+    // 同时使用条件确保余额足够，防止并发问题
+    const updateResult = await collection.where({
+      openID: openID,
+      [currencyType]: _.gte(amount)  // 确保余额足够
+    }).update({
+      [currencyType]: _.inc(-amount),  // 负数表示扣除
+      updatedAt: new Date()
+    });
+    
+    // 检查更新是否成功（如果余额不足，更新会失败）
+    if (updateResult.updated === 0) {
+      throw new Error(`Insufficient ${currencyType}`);
+    }
+    
+    // 返回更新后的数据
+    const updatedResult = await collection.where({
+      openID: openID
+    }).get();
+    
+    if (updatedResult.data && updatedResult.data.length > 0) {
+      return updatedResult.data[0];
+    }
+    
+    throw new Error('User not found after update');
+  } catch (error) {
+    console.error('decrementCurrency error:', error);
+    throw error;
+  }
+}
+
 // ==================== 关卡相关DAO方法 ====================
 
 /**
@@ -181,6 +288,10 @@ module.exports = {
   updateUser,
   findUsersByCondition,
   findLevelById,
+  
+  // 货币原子操作方法
+  incrementCurrency,
+  decrementCurrency,
   
   // 导出command对象供Service层使用
   command

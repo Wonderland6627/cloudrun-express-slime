@@ -100,18 +100,19 @@ curl -X POST http://localhost:3000/api/minigame/getUserGameInfoV2 \
 {
   "code": 0,
   "data": {
-    "openid": "test123",
     "openID": "test123",
-    "userGameInfo": {},
-    "createdAt": "2024-01-01T00:00:00.000Z",
-    "updatedAt": "2024-01-01T00:00:00.000Z",
     "progressLevelID": 0,
     "nickName": "",
-    "avatarUrl": ""
+    "avatarUrl": "",
+    "coin": 0,
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-01-01T00:00:00.000Z"
   },
   "msg": "no result found, created empty info"
 }
 ```
+
+**注意**：`userGameInfo` 字段已弃用，所有字段（`progressLevelID`、`nickName`、`avatarUrl`、`coin` 等）现在都直接在文档顶层。
 
 #### 测试5：设置用户游戏信息
 
@@ -128,10 +129,11 @@ curl -X POST http://localhost:3000/api/minigame/setUserGameInfoV2 \
 {
   "code": 0,
   "data": {
-    "openid": "test123",
+    "openID": "test123",
     "progressLevelID": 5,
     "nickName": "测试玩家",
     "avatarUrl": "https://example.com/avatar.jpg",
+    "coin": 0,
     "updatedAt": "2024-01-01T00:00:00.000Z"
   },
   "msg": "update user game info success"
@@ -320,18 +322,19 @@ curl -X POST https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api
 {
   "code": 0,
   "data": {
-    "openid": "test123",
     "openID": "test123",
-    "userGameInfo": {},
-    "createdAt": "2024-01-01T00:00:00.000Z",
-    "updatedAt": "2024-01-01T00:00:00.000Z",
     "progressLevelID": 0,
     "nickName": "",
-    "avatarUrl": ""
+    "avatarUrl": "",
+    "coin": 0,
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-01-01T00:00:00.000Z"
   },
   "msg": "no result found, created empty info"
 }
 ```
+
+**注意**：`userGameInfo` 字段已弃用，所有字段现在都直接在文档顶层。
 
 ### 💡 使用 Postman 测试
 

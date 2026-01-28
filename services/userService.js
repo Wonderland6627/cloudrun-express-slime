@@ -17,11 +17,13 @@ async function getUserGameInfo(openid) {
     const now = new Date();
     userData = await cloudbaseDB.createUser({
       openID: openid,
+      coin: 0,  // 新用户默认金币为 0
       createdAt: now,
       updatedAt: now
     });
     isNewRecord = true; // 标记为刚创建的新记录
   }
+  // 注意：老用户的 coin 字段如果不存在，会在首次货币操作时通过懒加载自动初始化
   
   return {
     data: userData,
