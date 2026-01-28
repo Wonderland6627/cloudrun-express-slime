@@ -73,7 +73,7 @@ async function setUserGameInfo(req, res, next) {
  */
 async function getUserRankList(req, res, next) {
   try {
-    const currentOpenID = req.user?.openid || null;
+    const currentOpenID = req.user.openid;
     const limit = parseInt(req.body.limit || req.query.limit || 100);
     
     const rankList = await gameService.getUserRankList(limit, currentOpenID);

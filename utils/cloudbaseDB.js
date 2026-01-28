@@ -164,30 +164,10 @@ async function findUsersByCondition(condition, options = {}) {
 async function findLevelById(levelId) {
   try {
     const collection = db.collection(COLLECTIONS.LEVELS);
+    const doc = collection.doc(levelId);
+    const result = await doc.get();
     
-    // 方式一：使用 doc() 方法根据 _id 查询（推荐）
-    try {
-      const doc = collection.doc(levelId);
-      const result = await doc.get();
-      
-      if (result.data) {
-        return result.data;
-      }
-    } catch (docError) {
-      // 如果 doc() 方法失败，尝试使用 where 查询
-      console.warn('doc() query failed, trying where query:', docError.message);
-    }
-    
-    // 方式二：使用 where 方法查询（备用）
-    const result = await collection.where({
-      _id: levelId
-    }).get();
-    
-    if (result.data && result.data.length > 0) {
-      return result.data[0];
-    }
-    
-    return null;
+    return result.data || null;
   } catch (error) {
     console.error('findLevelById error:', error);
     throw error;
