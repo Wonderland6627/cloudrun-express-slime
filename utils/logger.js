@@ -28,10 +28,29 @@ if (!fs.existsSync(LOG_ROOT_DIR)) {
 }
 
 /**
+ * 获取日志级别标记
+ * @param {string} level - 日志级别
+ * @returns {string} 级别标记
+ */
+function getLevelTag(level) {
+  const levelMap = {
+    'error': '[E]',
+    'warn': '[W]',
+    'info': '[I]',
+    'http': '[H]',
+    'debug': '[D]'
+  };
+  return levelMap[level.toLowerCase()] || '[?]';
+}
+
+/**
  * 自定义日志格式
- * 格式：YYYY-MM-DD HH:mm:ss.SSS [LEVEL]: message {扩展参数JSON}
+ * 格式：YYYY-MM-DD HH:mm:ss.SSS [标记] [LEVEL]: message {扩展参数JSON}
  */
 const customFormat = winston.format.printf(({ level, message, timestamp, ...meta }) => {
+  // 获取级别标记
+  const levelTag = getLevelTag(level);
+  
   // 处理扩展参数：如果有额外的元数据，转换为 JSON
   let metaStr = '';
   if (Object.keys(meta).length > 0) {
@@ -48,7 +67,7 @@ const customFormat = winston.format.printf(({ level, message, timestamp, ...meta
     }
   }
   
-  return `${timestamp} [${level.toUpperCase()}]: ${message}${metaStr}`;
+  return `${timestamp} ${levelTag} [${level.toUpperCase()}]: ${message}${metaStr}`;
 });
 
 /**

@@ -30,14 +30,17 @@ app.set('view engine', 'jade');
 app.use(morgan(':method :url :status :response-time ms - :res[content-length]', { 
   stream: httpLogger.stream 
 }));
-
-// 2. 详细请求日志中间件（记录 IP、响应内容等）
-app.use(httpLogger.logRequestDetails);
 // ========================================
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+
+// ============ 详细请求日志中间件（必须在 express.json() 之后）============
+// 2. 详细请求日志中间件（记录 IP、请求参数、响应内容等）
+// 注意：必须在 express.json() 之后，才能正确获取 req.body
+app.use(httpLogger.logRequestDetails);
+// ========================================
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
