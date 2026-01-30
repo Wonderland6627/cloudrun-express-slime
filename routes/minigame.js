@@ -9,6 +9,7 @@ const { validateCode } = require('../middlewares/validator');
 // 控制器
 const minigameController = require('../controllers/minigameController');
 const currencyController = require('../controllers/currencyController');
+const energyController = require('../controllers/energyController');
 
 /**
  * POST /api/minigame/getCode2Session
@@ -105,6 +106,16 @@ router.post('/deductCoin',
     req.body.currencyType = 'coin';
     return currencyController.deductCurrency(req, res, next);
   }
+);
+
+/**
+ * POST /api/minigame/updateEnergy
+ * 更新体力值（服务端校验）
+ * 请求参数：{ change: number, source: string }
+ */
+router.post('/updateEnergy',
+  authMiddleware,
+  energyController.updateEnergy
 );
 
 module.exports = router;

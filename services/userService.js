@@ -18,12 +18,14 @@ async function getUserGameInfo(openid) {
     userData = await cloudbaseDB.createUser({
       openID: openid,
       coin: 0,  // 新用户默认金币为 0
+      energy: 150,  // 新用户默认体力值为 150
       createdAt: now,
       updatedAt: now
     });
     isNewRecord = true; // 标记为刚创建的新记录
   }
   // 注意：老用户的 coin 字段如果不存在，会在首次货币操作时通过懒加载自动初始化
+  // 注意：老用户的 energy 字段如果不存在，会在首次体力操作时通过懒加载自动初始化
   
   return {
     data: userData,
