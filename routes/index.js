@@ -20,6 +20,22 @@ router.get('/api/version', function(req, res, next) {
 });
 
 /**
+ * GET /api/time
+ * 获取服务器时间
+ */
+router.get('/api/time', function(req, res, next) {
+  const now = new Date();
+  res.json({
+    code: 0,
+    data: {
+      timestamp: now.getTime(),
+      datetime: now.toISOString()
+    },
+    msg: 'success'
+  });
+});
+
+/**
  * GET /health
  * 健康检查端点（用于云托管健康检查）
  */
