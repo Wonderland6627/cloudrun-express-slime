@@ -20,10 +20,10 @@ router.get('/api/version', function(req, res, next) {
 });
 
 /**
- * GET /api/time
+ * POST /api/time
  * 获取服务器时间
  */
-router.get('/api/time', function(req, res, next) {
+router.post('/api/time', function(req, res, next) {
   const now = new Date();
   res.json({
     code: 0,
