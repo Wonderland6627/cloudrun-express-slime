@@ -1,6 +1,7 @@
 // 体力值控制器
 const energyService = require('../services/energyService');
-const { success, validationError } = require('../middlewares/response');
+const { success } = require('../middlewares/response');
+const { AppError } = require('../middlewares/errorHandler');
 const { RESPONSE_CODE } = require('../config/constants');
 
 /**
@@ -15,36 +16,20 @@ async function updateEnergy(req, res, next) {
     
     // 参数验证
     if (change === undefined || change === null) {
-      return validationError(res, 'change parameter is required');
+      throw new AppError('change parameter is required', RESPONSE_CODE.VALIDATION_ERROR, 400);
     }
     
     if (typeof change !== 'number') {
-      return validationError(res, 'change must be a number');
+      throw new AppError('change must be a number', RESPONSE_CODE.VALIDATION_ERROR, 400);
     }
     
     if (!source || typeof source !== 'string') {
-      return validationError(res, 'source parameter is required and must be a string');
+      throw new AppError('source parameter is required and must be a string', RESPONSE_CODE.VALIDATION_ERROR, 400);
     }
     
-    // 调用服务层更新体力值
+    // 调用服务层更新体力值（与其他 controller 保持一致）
     const result = await energyService.updateEnergy(openid, change, source);
-    if (result.success) {
-      // 成功：返回最新体力值
-      return success(res, {
-        energy: result.energy,
-        success: true
-      }, 'update energy success');
-    } else {
-      // 失败：返回当前体力值和错误信息
-      return res.json({
-        code: RESPONSE_CODE.ERROR,
-        msg: result.message || 'Energy out of range',
-        data: {
-          energy: result.energy,
-          success: false
-        }
-      });
-    }
+    return success(res, result, 'update energy success');
   } catch (err) {
     next(err);
   }

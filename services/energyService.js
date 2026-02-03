@@ -8,7 +8,8 @@ const { ENERGY } = require('../config/constants');
  * @param {string} openid - 用户openid
  * @param {number} change - 体力值变化量（正数为增加，负数为减少）
  * @param {string} source - 体力值变化来源
- * @returns {Promise<Object>} 更新结果 { success: boolean, energy: number, message?: string }
+ * @returns {Promise<Object>} 更新结果 { energy: number }
+ * @throws {Error} 如果用户不存在或体力值超出范围
  */
 async function updateEnergy(openid, change, source) {
   // 查询用户当前体力值
@@ -28,11 +29,7 @@ async function updateEnergy(openid, change, source) {
   
   // 校验范围：新值必须在 0-ENERGY.MAX 范围内
   if (newEnergy < 0 || newEnergy > ENERGY.MAX) {
-    return {
-      success: false,
-      energy: currentEnergy,
-      message: `Energy out of range. Current: ${currentEnergy}, Change: ${change}, Result: ${newEnergy}, Max: ${ENERGY.MAX}`
-    };
+    throw new Error(`Energy out of range. Current: ${currentEnergy}, Change: ${change}, Result: ${newEnergy}, Max: ${ENERGY.MAX}`);
   }
   
   // 使用原子操作 inc 更新体力值
@@ -42,7 +39,6 @@ async function updateEnergy(openid, change, source) {
   console.log(`[Energy] User ${openid} ${change > 0 ? 'added' : 'deducted'} ${Math.abs(change)} energy from ${source}. Current: ${updatedUser.energy}`);
   
   return {
-    success: true,
     energy: updatedUser.energy || newEnergy
   };
 }
