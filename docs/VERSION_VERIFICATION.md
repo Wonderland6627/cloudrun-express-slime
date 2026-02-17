@@ -9,7 +9,7 @@
 ### 1. 调用版本信息接口
 
 ```bash
-curl https://your-service-domain/api/version
+curl https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/version
 ```
 
 ### 2. 返回示例
