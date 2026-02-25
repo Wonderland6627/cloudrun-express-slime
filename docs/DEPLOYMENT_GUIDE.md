@@ -77,11 +77,14 @@ curl -X POST http://localhost:3000/api/minigame/getUserGameInfoV2 -H "Content-Ty
    - **Dockerfile 名称**：`Dockerfile`（已存在）
    - **环境变量**：点击添加，填入以下变量（请替换为您的实际值）：
      ```
+     NODE_ENV=production
      WX_APPID=your-wechat-appid
      WX_SECRET=your-wechat-secret
      TCB_ENV=your-env-id
      TCB_SECRET_ID=your-secret-id
      TCB_SECRET_KEY=your-secret-key
+     TOKEN_SECRET=your-strong-random-secret
+     ENABLE_TEST_MODE=false
      ```
    - **公网访问**：开启 ✅
    - **内网访问**：关闭（按需）
@@ -248,9 +251,12 @@ Body: { "levelId": "关卡ID" }  // 可选，默认使用测试ID
 
 ## ⚠️ 重要提示
 
-1. **数据库配置**：项目已集成CloudBase文档型数据库，需要在云托管控制台配置 `TCB_ENV` 环境变量
-2. **安全性**：生产环境建议使用环境变量存储敏感信息，不要硬编码
-3. **跨域问题**：如果前端有跨域问题，需要在 `app.js` 中添加CORS中间件
+1. **环境配置**：
+   - 生产环境必须设置 `NODE_ENV=production` 和 `ENABLE_TEST_MODE=false`
+   - 本地开发建议设置 `NODE_ENV=development` 和 `ENABLE_TEST_MODE=true`
+2. **数据库配置**：项目已集成CloudBase文档型数据库，需要在云托管控制台配置 `TCB_ENV` 环境变量
+3. **安全性**：生产环境必须使用环境变量存储敏感信息，不要硬编码
+4. **跨域问题**：如果前端有跨域问题，需要在 `app.js` 中添加CORS中间件
 
 ## 📞 需要帮助？
 
