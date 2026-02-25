@@ -180,7 +180,7 @@ class PlatformAuthFactory {
     // 检查Editor平台是否允许（需要测试模式开关）
     if (platform === PLATFORM_TYPES.EDITOR) {
       if (process.env.ENABLE_TEST_MODE !== 'true') {
-        throw new Error('Editor platform is only available for local test');
+        throw new Error('Editor platform is only available in test mode');
       }
       return PLATFORM_TYPES.EDITOR;
     }
