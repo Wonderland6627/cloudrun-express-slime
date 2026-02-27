@@ -1,41 +1,31 @@
-# 二开推荐阅读[如何提高项目构建效率](https://developers.weixin.qq.com/miniprogram/dev/wxcloudrun/src/scene/build/speed.html)
-# 使用 Alpine 3.19 以支持 Node.js 18+
-FROM alpine:3.19
+# === 第一阶段：安装生产依赖 ===
+FROM node:20-alpine AS deps
 
-# 安装依赖包，如需其他依赖包，请到alpine依赖包管理(https://pkgs.alpinelinux.org/packages)查找。
-# 选用国内镜像源以提高下载速度
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tencent.com/g' /etc/apk/repositories \
-&& apk add --update --no-cache nodejs npm
-
-# 容器默认时区为UTC，如需使用上海时间请启用以下时区设置命令
-RUN apk add tzdata && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo Asia/Shanghai > /etc/timezone
-
-# 使用 HTTPS 协议访问容器云调用证书安装
-RUN apk add ca-certificates
-
-# # 指定工作目录
 WORKDIR /app
 
-# 拷贝包管理文件
-COPY package*.json /app/
+COPY package.json package-lock.json ./
 
-# npm 源，选用国内镜像源以提高下载速度
-RUN npm config set registry https://mirrors.cloud.tencent.com/npm/
-# RUN npm config set registry https://registry.npm.taobao.org/
+RUN npm ci --omit=dev
 
-# npm 安装依赖
-RUN npm install
+# === 第二阶段：精简生产镜像 ===
+FROM node:20-alpine
 
-# 将当前目录（dockerfile所在目录）下所有文件都拷贝到工作目录下（.dockerignore中文件除外）
-COPY . /app
+RUN apk add --no-cache tzdata ca-certificates \
+    && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
+    && echo Asia/Shanghai > /etc/timezone
 
-# 设置服务监听端口为80（腾讯云托管默认健康检查端口）
+WORKDIR /app
+
+# 从第一阶段复制已安装的 node_modules（不含 npm 缓存）
+COPY --from=deps /app/node_modules ./node_modules
+
+# 复制应用代码（受 .dockerignore 控制，排除 docs/logs/views 等）
+COPY . .
+
+ENV NODE_ENV=production
 ENV PORT=80
 
-# 暴露端口
 EXPOSE 80
 
-# 执行启动命令
-# 写多行独立的CMD命令是错误写法！只有最后一行CMD命令会被执行，之前的都会被忽略，导致业务报错。
-# 请参考[Docker官方文档之CMD命令](https://docs.docker.com/engine/reference/builder/#cmd)
-CMD ["npm", "start"]
+# 直接用 node 启动，跳过 npm 的进程管理开销
+CMD ["node", "./bin/www"]

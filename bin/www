@@ -1,79 +1,29 @@
 #!/usr/bin/env node
 
-/**
- * Module dependencies.
- */
+const startTime = Date.now();
 
 var app = require('../app');
-var debug = require('debug')('slime_express:server');
 var http = require('http');
 
-/**
- * Get port from environment and store in Express.
- */
-
-var port = normalizePort(process.env.PORT || '3000');
+var port = parseInt(process.env.PORT, 10) || 3000;
 app.set('port', port);
 
-// Log the port being used for debugging
-console.log('Server will listen on port:', port);
-console.log('PORT environment variable:', process.env.PORT || 'not set (using default 3000)');
-
-/**
- * Create HTTP server.
- */
-
 var server = http.createServer(app);
-
-/**
- * Listen on provided port, on all network interfaces.
- */
 
 server.listen(port);
 server.on('error', onError);
 server.on('listening', onListening);
 
-/**
- * Normalize a port into a number, string, or false.
- */
-
-function normalizePort(val) {
-  var port = parseInt(val, 10);
-
-  if (isNaN(port)) {
-    // named pipe
-    return val;
-  }
-
-  if (port >= 0) {
-    // port number
-    return port;
-  }
-
-  return false;
-}
-
-/**
- * Event listener for HTTP server "error" event.
- */
-
 function onError(error) {
-  if (error.syscall !== 'listen') {
-    throw error;
-  }
+  if (error.syscall !== 'listen') throw error;
 
-  var bind = typeof port === 'string'
-    ? 'Pipe ' + port
-    : 'Port ' + port;
-
-  // handle specific listen errors with friendly messages
   switch (error.code) {
     case 'EACCES':
-      console.error(bind + ' requires elevated privileges');
+      console.error(`Port ${port} requires elevated privileges`);
       process.exit(1);
       break;
     case 'EADDRINUSE':
-      console.error(bind + ' is already in use');
+      console.error(`Port ${port} is already in use`);
       process.exit(1);
       break;
     default:
@@ -81,14 +31,17 @@ function onError(error) {
   }
 }
 
-/**
- * Event listener for HTTP server "listening" event.
- */
-
 function onListening() {
   var addr = server.address();
-  var bind = typeof addr === 'string'
-    ? 'pipe ' + addr
-    : 'port ' + addr.port;
-  debug('Listening on ' + bind);
+  var elapsed = Date.now() - startTime;
+  console.log(`Server listening on port ${addr.port} (${elapsed}ms)`);
+
+  // 后台异步预热数据库连接，不阻塞健康检查响应
+  setImmediate(() => {
+    try {
+      require('../utils/cloudbaseDB').warmUp();
+    } catch (e) {
+      console.warn('[DB] Background warm-up failed:', e.message);
+    }
+  });
 }

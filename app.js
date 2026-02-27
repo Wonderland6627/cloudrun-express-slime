@@ -4,7 +4,6 @@ require('dotenv').config();
 var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
-var cookieParser = require('cookie-parser');
 var morgan = require('morgan');
 
 // 引入自定义日志系统
@@ -21,10 +20,6 @@ var app = express();
 // 启动时输出版本信息（使用新的 logger）
 logger.info('Server Starting', { version: getVersionString() });
 
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
-
 // ============ 日志中间件配置 ============
 // 1. Morgan 基础日志（将输出流导向 winston）
 app.use(morgan(':method :url :status :response-time ms - :res[content-length]', { 
@@ -34,7 +29,6 @@ app.use(morgan(':method :url :status :response-time ms - :res[content-length]', 
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
 
 // ============ 详细请求日志中间件（必须在 express.json() 之后）============
 // 2. 详细请求日志中间件（记录 IP、请求参数、响应内容等）
@@ -45,9 +39,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/api/minigame', minigameRouter);
-
-// add default index.html
-app.use(express.static(__dirname+"/public",{index:"index.html"}));
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

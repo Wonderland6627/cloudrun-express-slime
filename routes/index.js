@@ -2,9 +2,9 @@ var express = require('express');
 var router = express.Router();
 const { getVersionInfo } = require('../utils/version');
 
-/* GET home page. */
-router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express' });
+/* GET home page - 由 express.static 提供 public/index.html，此为 fallback */
+router.get('/', function(req, res) {
+  res.json({ status: 'ok', service: 'Slime Express' });
 });
 
 /**
