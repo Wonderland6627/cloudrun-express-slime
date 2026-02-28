@@ -47,7 +47,8 @@ module.exports = {
     DAILY_LOGIN: 'daily_login',
     AD_REWARD: 'ad_reward',
     CHEST_REWARD: 'chest_reward',
-    LEVEL_CONSUME: 'level_consume'
+    LEVEL_CONSUME: 'level_consume',
+    LEVEL_REWARD: 'level_reward'
   }
 };
 

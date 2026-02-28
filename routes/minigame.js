@@ -10,6 +10,7 @@ const { validateCode } = require('../middlewares/validator');
 const minigameController = require('../controllers/minigameController');
 const currencyController = require('../controllers/currencyController');
 const energyController = require('../controllers/energyController');
+const levelRewardController = require('../controllers/levelRewardController');
 
 /**
  * POST /api/minigame/getCode2Session
@@ -116,6 +117,16 @@ router.post('/deductCoin',
 router.post('/updateEnergy',
   authMiddleware,
   energyController.updateEnergy
+);
+
+/**
+ * POST /api/minigame/claimLevelReward
+ * 通关奖励服务端统一结算
+ * 请求参数：{ levelId: number, watchedAd?: boolean }
+ */
+router.post('/claimLevelReward',
+  authMiddleware,
+  levelRewardController.claimLevelReward
 );
 
 module.exports = router;

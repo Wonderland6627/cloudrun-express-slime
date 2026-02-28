@@ -177,6 +177,37 @@ async function decrementCurrency(openID, currencyType, amount) {
   }
 }
 
+/**
+ * 一次原子操作同时 set 和 inc 多个字段
+ * @param {string} openID
+ * @param {Object} sets - 直接赋值字段 e.g. { progressLevelID: 5 }
+ * @param {Object} increments - 增量字段 e.g. { coin: 175, energy: 3 }
+ * @returns {Promise<Object>} updated user document
+ */
+async function batchUpdateAndIncrement(openID, sets, increments) {
+  try {
+    const db = getDB();
+    const _ = db.command;
+    const collection = db.collection(COLLECTIONS.USER_GAME_INFOS);
+
+    const updateData = { ...sets, updatedAt: new Date() };
+    for (const [field, amount] of Object.entries(increments)) {
+      if (amount !== 0) updateData[field] = _.inc(amount);
+    }
+
+    await collection.where({ openID }).update(updateData);
+
+    const result = await collection.where({ openID }).get();
+    if (result.data && result.data.length > 0) {
+      return result.data[0];
+    }
+    throw new Error('User not found after batch update');
+  } catch (error) {
+    console.error('batchUpdateAndIncrement error:', error);
+    throw error;
+  }
+}
+
 // ==================== 关卡相关DAO方法 ====================
 
 async function findLevelById(levelId) {
@@ -198,6 +229,7 @@ module.exports = {
   findLevelById,
   incrementCurrency,
   decrementCurrency,
+  batchUpdateAndIncrement,
   get command() { return getDB().command; },
   warmUp
 };
