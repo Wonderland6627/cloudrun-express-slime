@@ -108,16 +108,24 @@ async function findUsersByCondition(condition, options = {}) {
   }
 }
 
-// ==================== 货币相关DAO方法（原子操作）====================
+// ==================== 资源相关DAO方法（原子操作）====================
 
-async function incrementCurrency(openID, currencyType, amount) {
+/**
+ * 原子增减资源（操作 resources.{resourceTypeId} 字段）
+ * @param {string} openID
+ * @param {number} resourceTypeId - 资源类型ID
+ * @param {number} amount - 变化量（正数增加，负数减少）
+ * @returns {Promise<Object>} updated user document
+ */
+async function incrementResource(openID, resourceTypeId, amount) {
   try {
     const db = getDB();
     const _ = db.command;
     const collection = db.collection(COLLECTIONS.USER_GAME_INFOS);
+    const fieldPath = `resources.${resourceTypeId}`;
 
     await collection.where({ openID }).update({
-      [currencyType]: _.inc(amount),
+      [fieldPath]: _.inc(amount),
       updatedAt: new Date()
     });
 
@@ -125,74 +133,31 @@ async function incrementCurrency(openID, currencyType, amount) {
     if (updatedResult.data && updatedResult.data.length > 0) {
       return updatedResult.data[0];
     }
-    throw new Error('User not found after update');
+    throw new Error('User not found after resource update');
   } catch (error) {
-    console.error('incrementCurrency error:', error);
-    throw error;
-  }
-}
-
-async function decrementCurrency(openID, currencyType, amount) {
-  try {
-    const db = getDB();
-    const _ = db.command;
-    const collection = db.collection(COLLECTIONS.USER_GAME_INFOS);
-
-    const userData = await findUserByOpenID(openID);
-    if (!userData) throw new Error('User not found');
-
-    if (userData[currencyType] === undefined || userData[currencyType] === null) {
-      await collection.where({ openID }).update({
-        [currencyType]: 0,
-        updatedAt: new Date()
-      });
-      userData[currencyType] = 0;
-    }
-
-    const currentAmount = userData[currencyType] || 0;
-    if (currentAmount < amount) {
-      throw new Error(`Insufficient ${currencyType}`);
-    }
-
-    const updateResult = await collection.where({
-      openID,
-      [currencyType]: _.gte(amount)
-    }).update({
-      [currencyType]: _.inc(-amount),
-      updatedAt: new Date()
-    });
-
-    if (updateResult.updated === 0) {
-      throw new Error(`Insufficient ${currencyType}`);
-    }
-
-    const updatedResult = await collection.where({ openID }).get();
-    if (updatedResult.data && updatedResult.data.length > 0) {
-      return updatedResult.data[0];
-    }
-    throw new Error('User not found after update');
-  } catch (error) {
-    console.error('decrementCurrency error:', error);
+    console.error('incrementResource error:', error);
     throw error;
   }
 }
 
 /**
- * 一次原子操作同时 set 和 inc 多个字段
+ * 一次原子操作同时 set 和 inc 多个字段（支持 resources 嵌套字段）
  * @param {string} openID
  * @param {Object} sets - 直接赋值字段 e.g. { progressLevelID: 5 }
- * @param {Object} increments - 增量字段 e.g. { coin: 175, energy: 3 }
+ * @param {Object} resourceIncrements - resources 内的增量 e.g. { 1: 175, 2: 3 }
  * @returns {Promise<Object>} updated user document
  */
-async function batchUpdateAndIncrement(openID, sets, increments) {
+async function batchUpdateAndIncrement(openID, sets, resourceIncrements) {
   try {
     const db = getDB();
     const _ = db.command;
     const collection = db.collection(COLLECTIONS.USER_GAME_INFOS);
 
     const updateData = { ...sets, updatedAt: new Date() };
-    for (const [field, amount] of Object.entries(increments)) {
-      if (amount !== 0) updateData[field] = _.inc(amount);
+    for (const [resourceTypeId, amount] of Object.entries(resourceIncrements)) {
+      if (amount !== 0) {
+        updateData[`resources.${resourceTypeId}`] = _.inc(amount);
+      }
     }
 
     await collection.where({ openID }).update(updateData);
@@ -227,8 +192,7 @@ module.exports = {
   updateUser,
   findUsersByCondition,
   findLevelById,
-  incrementCurrency,
-  decrementCurrency,
+  incrementResource,
   batchUpdateAndIncrement,
   get command() { return getDB().command; },
   warmUp

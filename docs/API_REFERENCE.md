@@ -50,9 +50,11 @@ Authorization: Bearer <token>
     "progressLevelID": 0,
     "nickName": "string",
     "avatarUrl": "string",
-    "coin": 0,
-    "energy": 0,
-    "maxEnergy": 100
+    "resources": {
+      "1": 0,
+      "2": 150,
+      "3": 0
+    }
   }
 }
 ```
@@ -83,7 +85,7 @@ Authorization: Bearer <token>
 **请求参数**：
 ```json
 {
-  "limit": 100  // 可选，默认100
+  "limit": 100
 }
 ```
 
@@ -96,62 +98,109 @@ Authorization: Bearer <token>
 **请求参数**：
 ```json
 {
-  "levelId": 1  // 可选，不传返回所有关卡
+  "levelId": 1
 }
 ```
 
-## 货币系统
+## 资源系统
 
-### 增加货币
+### ResourceType 枚举
+
+| ID | 名称 | 说明 |
+|----|------|------|
+| 1 | Coin | 金币 |
+| 2 | Energy | 体力 |
+| 3 | Diamond | 钻石 |
+
+### 更新资源
 ```
-POST /addCurrency
+POST /updateResource
 Authorization: Bearer <token>
 ```
 
 **请求参数**：
 ```json
 {
-  "currencyType": "coin",  // coin | diamond
-  "amount": 100,
-  "source": "string",      // level_reward | daily_checkin | first_clear
-  "metadata": {}           // 可选
+  "resourceType": 1,
+  "change": 100,
+  "source": "level_reward"
 }
 ```
 
-### 扣除货币
+**响应**：
+```json
+{
+  "code": 0,
+  "data": {
+    "resourceType": 1,
+    "value": 600,
+    "change": 100
+  }
+}
 ```
-POST /deductCurrency
+
+### 获取所有资源
+```
+POST /getResources
+Authorization: Bearer <token>
+```
+
+**响应**：
+```json
+{
+  "code": 0,
+  "data": {
+    "resources": {
+      "1": 500,
+      "2": 80,
+      "3": 0
+    }
+  }
+}
+```
+
+### ResourceSource 来源枚举
+
+| 值 | 说明 |
+|----|------|
+| daily_checkin | 每日签到 |
+| level_reward | 推关奖励 |
+| first_clear | 首次通关 |
+| star_reward | 星级奖励 |
+| daily_task | 每日任务 |
+| achievement | 成就奖励 |
+| daily_login | 每日登录 |
+| ad_reward | 广告奖励 |
+| chest_reward | 宝箱奖励 |
+| level_consume | 关卡消耗 |
+
+## 通关奖励
+
+### 领取通关奖励
+```
+POST /claimLevelReward
 Authorization: Bearer <token>
 ```
 
 **请求参数**：
 ```json
 {
-  "currencyType": "coin",
-  "amount": 50,
-  "reason": "string"
+  "levelId": 1,
+  "watchedAd": false
 }
 ```
 
-### 便捷接口
-```
-POST /addCoin      // 等同于 addCurrency(currencyType="coin")
-POST /deductCoin   // 等同于 deductCurrency(currencyType="coin")
-```
-
-## 体力系统
-
-### 更新体力
-```
-POST /updateEnergy
-Authorization: Bearer <token>
-```
-
-**请求参数**：
+**响应**：
 ```json
 {
-  "change": -10,           // 正数增加，负数扣除
-  "source": "string"       // level_play | time_recovery
+  "code": 0,
+  "data": {
+    "rewards": [
+      { "resourceType": 1, "amount": 100, "source": "level_reward" },
+      { "resourceType": 2, "amount": 3, "source": "level_reward" }
+    ],
+    "isFirstClear": true
+  }
 }
 ```
 
@@ -180,15 +229,14 @@ var userInfo = await NetManager.CallHttp<UserGameInfoData>("getUserGameInfoV2");
 await NetManager.CallHttp<object>("setUserGameInfoV2", 
     new { progressLevelID = 5, nickName = "玩家" });
 
-// 增加金币
-await NetManager.CallHttp<object>("addCoin", 
-    new { amount = 100, source = "level_reward" });
+// 增加金币（ResourceType.Coin = 1）
+await NetManager.CallHttp<UpdateResourceResponse>("updateResource", 
+    new { resourceType = 1, change = 100, source = "level_reward" });
 
-// 扣除金币
-await NetManager.CallHttp<object>("deductCoin", 
-    new { amount = 50, reason = "refresh_reward" });
+// 扣除体力（ResourceType.Energy = 2）
+await NetManager.CallHttp<UpdateResourceResponse>("updateResource", 
+    new { resourceType = 2, change = -10, source = "level_consume" });
 
-// 更新体力
-await NetManager.CallHttp<object>("updateEnergy", 
-    new { change = -10, source = "level_play" });
+// 获取所有资源
+var resources = await NetManager.CallHttp<GetResourcesResponse>("getResources");
 ```

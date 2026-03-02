@@ -21,34 +21,31 @@ module.exports = {
     VALIDATION_ERROR: -4
   },
   
-  // 货币类型枚举
-  CURRENCY_TYPES: {
-    COIN: 'coin',
-    DIAMOND: 'diamond'  // 未来扩展
+  // 资源类型枚举（与客户端 ResourceType enum 一致）
+  RESOURCE_TYPE: {
+    COIN: 1,
+    ENERGY: 2,
+    DIAMOND: 3
   },
-  
-  // 货币来源枚举
-  CURRENCY_SOURCE: {
+
+  // 资源配置（每种资源的校验规则和默认值）
+  RESOURCE_CONFIG: {
+    1: { key: 'coin', defaultValue: 0, min: 0, max: null },
+    2: { key: 'energy', defaultValue: 150, min: 0, max: 150 },
+    3: { key: 'diamond', defaultValue: 0, min: 0, max: null }
+  },
+
+  // 资源来源枚举（合并原 CURRENCY_SOURCE + ENERGY_SOURCE）
+  RESOURCE_SOURCE: {
     DAILY_CHECKIN: 'daily_checkin',
     LEVEL_REWARD: 'level_reward',
     FIRST_CLEAR: 'first_clear',
     STAR_REWARD: 'star_reward',
     DAILY_TASK: 'daily_task',
-    ACHIEVEMENT: 'achievement'
-  },
-  
-  // 体力值常量
-  ENERGY: {
-    MAX: 150  // 体力值上限
-  },
-  
-  // 体力值来源枚举
-  ENERGY_SOURCE: {
+    ACHIEVEMENT: 'achievement',
     DAILY_LOGIN: 'daily_login',
     AD_REWARD: 'ad_reward',
     CHEST_REWARD: 'chest_reward',
-    LEVEL_CONSUME: 'level_consume',
-    LEVEL_REWARD: 'level_reward'
+    LEVEL_CONSUME: 'level_consume'
   }
 };
-

@@ -1,4 +1,4 @@
-// 小游戏API路由 - 重构后的版本（标准分层架构）
+// 小游戏API路由
 const express = require('express');
 const router = express.Router();
 
@@ -8,14 +8,11 @@ const { validateCode } = require('../middlewares/validator');
 
 // 控制器
 const minigameController = require('../controllers/minigameController');
-const currencyController = require('../controllers/currencyController');
-const energyController = require('../controllers/energyController');
+const resourceController = require('../controllers/resourceController');
 const levelRewardController = require('../controllers/levelRewardController');
 
 /**
  * POST /api/minigame/getCode2Session
- * 通过code获取微信用户信息
- * 参数: code (query或body)
  */
 router.post('/getCode2Session', 
   validateCode,
@@ -24,7 +21,6 @@ router.post('/getCode2Session',
 
 /**
  * POST /api/minigame/getUserWXContext
- * 获取微信上下文（需要从header或body中传递openid）
  */
 router.post('/getUserWXContext',
   authMiddleware,
@@ -33,7 +29,6 @@ router.post('/getUserWXContext',
 
 /**
  * POST /api/minigame/getUserGameInfoV2
- * 获取用户游戏信息（V2版本）
  */
 router.post('/getUserGameInfoV2',
   authMiddleware,
@@ -42,7 +37,6 @@ router.post('/getUserGameInfoV2',
 
 /**
  * POST /api/minigame/setUserGameInfoV2
- * 设置用户游戏信息（V2版本）
  */
 router.post('/setUserGameInfoV2',
   authMiddleware,
@@ -51,7 +45,6 @@ router.post('/setUserGameInfoV2',
 
 /**
  * POST /api/minigame/getUserRankListV2
- * 获取排行榜（V2版本）
  */
 router.post('/getUserRankListV2',
   authMiddleware,
@@ -60,7 +53,6 @@ router.post('/getUserRankListV2',
 
 /**
  * POST /api/minigame/getLevelsConfigV2
- * 获取关卡配置（V2版本）
  */
 router.post('/getLevelsConfigV2',
   authMiddleware,
@@ -68,61 +60,25 @@ router.post('/getLevelsConfigV2',
 );
 
 /**
- * POST /api/minigame/addCurrency
- * 增加用户货币（通用接口，支持多种货币类型）
+ * POST /api/minigame/updateResource
+ * Body: { resourceType: number, change: number, source: string }
  */
-router.post('/addCurrency',
+router.post('/updateResource',
   authMiddleware,
-  currencyController.addCurrency
+  resourceController.updateResource
 );
 
 /**
- * POST /api/minigame/deductCurrency
- * 扣除用户货币（通用接口，支持多种货币类型）
+ * POST /api/minigame/getResources
  */
-router.post('/deductCurrency',
+router.post('/getResources',
   authMiddleware,
-  currencyController.deductCurrency
-);
-
-/**
- * POST /api/minigame/addCoin
- * 增加用户金币（便捷接口，向后兼容）
- */
-router.post('/addCoin',
-  authMiddleware,
-  async (req, res, next) => {
-    req.body.currencyType = 'coin';
-    return currencyController.addCurrency(req, res, next);
-  }
-);
-
-/**
- * POST /api/minigame/deductCoin
- * 扣除用户金币（便捷接口，向后兼容）
- */
-router.post('/deductCoin',
-  authMiddleware,
-  async (req, res, next) => {
-    req.body.currencyType = 'coin';
-    return currencyController.deductCurrency(req, res, next);
-  }
-);
-
-/**
- * POST /api/minigame/updateEnergy
- * 更新体力值（服务端校验）
- * 请求参数：{ change: number, source: string }
- */
-router.post('/updateEnergy',
-  authMiddleware,
-  energyController.updateEnergy
+  resourceController.getResources
 );
 
 /**
  * POST /api/minigame/claimLevelReward
- * 通关奖励服务端统一结算
- * 请求参数：{ levelId: number, watchedAd?: boolean }
+ * Body: { levelId: number, watchedAd?: boolean }
  */
 router.post('/claimLevelReward',
   authMiddleware,
