@@ -115,7 +115,7 @@ class EditorAuth {
   async code2Session(code) {
     // code 作为开发者身份标识，不同 code 对应不同账号
     const editorId = code || process.env.TEST_OPENID || 'default';
-    const testOpenid = `editor_${editorId}`;
+    const testOpenid = editorId;
     return {
       openid: testOpenid,
       session_key: 'editor_test_session_key',
