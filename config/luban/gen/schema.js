@@ -8,23 +8,23 @@
 //------------------------------------------------------------------------------
 
 
-export const ItemEQuality = Object.freeze({
+export const EQuality = Object.freeze({
     /**
-     * 最差品质
+     * 普通
      */
     WHITE: 1,
     /**
-     * 蓝色的
+     * 稀有
      */
     BLUE: 2,
     /**
-     * 紫色的
+     * 史诗
      */
     PURPLE: 3,
     /**
-     * 最高品质
+     * 传说
      */
-    RED: 4,
+    ORANGE: 4,
 });
 
 export const TestAccessFlag = Object.freeze({
@@ -36,6 +36,21 @@ export const TestAccessFlag = Object.freeze({
      * 位标记使用示例
      */
     READ_WRITE: 3,
+});
+
+export const UnitEUnitRace = Object.freeze({
+    /**
+     * 蓝晶族
+     */
+    BLUE: 1,
+    /**
+     * 赤焰族
+     */
+    RED: 2,
+    /**
+     * 黯渊族
+     */
+    BLACK: 99,
 });
 
 
@@ -194,6 +209,31 @@ export class TestTestExcelBean2 {
 }
 
 
+export class UnitUnit {
+
+    constructor(_json_) {
+        if (_json_.id === undefined) { throw new Error() };
+        this.id = _json_.id;
+        if (_json_.name === undefined) { throw new Error() };
+        this.name = _json_.name;
+        if (_json_.desc === undefined) { throw new Error() };
+        this.desc = _json_.desc;
+        if (_json_.unit_race === undefined) { throw new Error() };
+        this.unitRace = _json_.unit_race;
+        if (_json_.quality === undefined) { throw new Error() };
+        this.quality = _json_.quality;
+    }
+
+    resolve(tables) {
+        
+        
+        
+        
+        
+    }
+}
+
+
 export class vector2 {
 
     constructor(_json_) {
@@ -279,13 +319,49 @@ export class ItemTbItem {
 }
 
 
+/**
+ * 角色单位
+ */
+export class UnitTbUnit {
+
+    constructor(_json_) {
+        this._dataMap = new Map();
+        this._dataList = [];
+        for(var _json2_ of _json_) {
+            let _v;
+            _v = new UnitUnit(_json2_);
+            this._dataList.push(_v);
+            this._dataMap.set(_v.id, _v);
+        }
+    }
+
+    getDataMap() { return this._dataMap; }
+    getDataList() { return this._dataList; }
+
+    get(key) { return this._dataMap.get(key); }
+
+    resolve(tables) {
+        for(let  data of this._dataList) {
+            data.resolve(tables);
+        }
+    }
+
+}
+
+
 export class Tables {
     get TbItem() { return this._TbItem;}
+    /**
+     * 角色单位
+     */
+    get TbUnit() { return this._TbUnit;}
 
     constructor(loader) {
         this._TbItem = new ItemTbItem(loader('item_tbitem'));
+        this._TbUnit = new UnitTbUnit(loader('unit_tbunit'));
 
         this._TbItem.resolve(this);
+        this._TbUnit.resolve(this);
     }
 }
 

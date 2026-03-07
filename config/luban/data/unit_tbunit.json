@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1001,
+    "name": "小水滴",
+    "desc": "",
+    "unit_race": 1,
+    "quality": 2
+  },
+  {
+    "id": 1002,
+    "name": "小火苗",
+    "desc": "",
+    "unit_race": 2,
+    "quality": 2
+  }
+]
