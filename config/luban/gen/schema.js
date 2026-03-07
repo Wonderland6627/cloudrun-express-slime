@@ -57,39 +57,6 @@ export const UnitEUnitRace = Object.freeze({
 
 
 
-export class ItemItem {
-
-    constructor(_json_) {
-        if (_json_.id === undefined) { throw new Error() };
-        this.id = _json_.id;
-        if (_json_.name === undefined) { throw new Error() };
-        this.name = _json_.name;
-        if (_json_.price === undefined) { throw new Error() };
-        this.price = _json_.price;
-        if (_json_.upgrade_to_item_id === undefined) { throw new Error() };
-        this.upgradeToItemId = _json_.upgrade_to_item_id;
-        if(_json_.expire_time != undefined) { this.expireTime = _json_.expire_time } else { this.expireTime = undefined };
-        if (_json_.quality === undefined) { throw new Error() };
-        this.quality = _json_.quality;
-        if (_json_.exchange_list === undefined) { throw new Error() };
-        { this.exchangeList = []; for(let _ele0 of _json_.exchange_list) { let _e0; _e0 = new ItemItemExchange(_ele0); this.exchangeList.push(_e0);}};
-        if (_json_.exchange_column === undefined) { throw new Error() };
-        this.exchangeColumn = new ItemItemExchange(_json_.exchange_column);
-    }
-
-    resolve(tables) {
-        
-        
-        
-        this.upgradeToItemId_ref = tables.TbItem.get(this.upgradeToItemId)
-        
-        
-        for (let _e of this.exchangeList) { _e?.resolve(tables); }
-        this.exchangeColumn?.resolve(tables);
-    }
-}
-
-
 export class ItemItemExchange {
 
     constructor(_json_) {
@@ -222,9 +189,12 @@ export class UnitUnit {
         this.unitRace = _json_.unit_race;
         if (_json_.quality === undefined) { throw new Error() };
         this.quality = _json_.quality;
+        if (_json_.img_path === undefined) { throw new Error() };
+        this.imgPath = _json_.img_path;
     }
 
     resolve(tables) {
+        
         
         
         
@@ -292,33 +262,6 @@ export class vector4 {
 
 
 
-export class ItemTbItem {
-
-    constructor(_json_) {
-        this._dataMap = new Map();
-        this._dataList = [];
-        for(var _json2_ of _json_) {
-            let _v;
-            _v = new ItemItem(_json2_);
-            this._dataList.push(_v);
-            this._dataMap.set(_v.id, _v);
-        }
-    }
-
-    getDataMap() { return this._dataMap; }
-    getDataList() { return this._dataList; }
-
-    get(key) { return this._dataMap.get(key); }
-
-    resolve(tables) {
-        for(let  data of this._dataList) {
-            data.resolve(tables);
-        }
-    }
-
-}
-
-
 /**
  * 角色单位
  */
@@ -350,17 +293,14 @@ export class UnitTbUnit {
 
 
 export class Tables {
-    get TbItem() { return this._TbItem;}
     /**
      * 角色单位
      */
     get TbUnit() { return this._TbUnit;}
 
     constructor(loader) {
-        this._TbItem = new ItemTbItem(loader('item_tbitem'));
         this._TbUnit = new UnitTbUnit(loader('unit_tbunit'));
 
-        this._TbItem.resolve(this);
         this._TbUnit.resolve(this);
     }
 }

@@ -4,13 +4,15 @@
     "name": "小水滴",
     "desc": "",
     "unit_race": 1,
-    "quality": 2
+    "quality": 2,
+    "img_path": "Assets/AssetRaw/UIRaw/Atlas/Unit/Unit_1001.png"
   },
   {
     "id": 1002,
     "name": "小火苗",
     "desc": "",
     "unit_race": 2,
-    "quality": 2
+    "quality": 2,
+    "img_path": "Assets/AssetRaw/UIRaw/Atlas/Unit/Unit_1002.png"
   }
 ]
