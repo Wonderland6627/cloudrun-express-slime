@@ -20,6 +20,19 @@ var app = express();
 // 启动时输出版本信息（使用新的 logger）
 logger.info('Server Starting', { version: getVersionString() });
 
+// ============ Luban 配置表加载 ============
+const configManager = require('./config/luban/configManager');
+if (configManager.loaded) {
+  const names = configManager.tableNames;
+  logger.info('Luban config loaded', {
+    tables: names,
+    counts: names.map(t => `${t}: ${configManager.tables[t].count}`)
+  });
+} else {
+  logger.warn('Luban config not loaded (data directory may be empty, run gen_code_bin_to_server first)');
+}
+// ==========================================
+
 // ============ 日志中间件配置 ============
 // 1. Morgan 基础日志（将输出流导向 winston）
 app.use(morgan(':method :url :status :response-time ms - :res[content-length]', { 
