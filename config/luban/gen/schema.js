@@ -57,92 +57,46 @@ export const UnitEUnitRace = Object.freeze({
 
 
 
-export class ItemItemExchange {
-
-    constructor(_json_) {
-        if (_json_.id === undefined) { throw new Error() };
-        this.id = _json_.id;
-        if (_json_.num === undefined) { throw new Error() };
-        this.num = _json_.num;
-    }
-
-    resolve(tables) {
-        
-        
-    }
-}
-
-
-export class TestShape {
-    static constructorFrom(_json_) {
-        switch (_json_["$type"]) {
-            case 'Circle': return new TestCircle(_json_);
-            case 'Rectangle': return new TestRectangle(_json_);
-            default: throw new Error();
-        }
-    }
-
-    constructor(_json_) {
-    }
-
-    resolve(tables) {
-    }
-}
-
-
 /**
- * 这是一个圆
+ * 整数范围
  */
-export class TestCircle extends TestShape {
+export class CommonIntRange {
 
     constructor(_json_) {
-        super(_json_);
-        if (_json_.radius === undefined) { throw new Error() };
-        this.radius = _json_.radius;
+        if (_json_.min === undefined) { throw new Error() };
+        this.min = _json_.min;
+        if (_json_.max === undefined) { throw new Error() };
+        this.max = _json_.max;
     }
 
     resolve(tables) {
-        super.resolve(tables);
-        
-    }
-}
-
-
-/**
- * 这是一个矩形
- */
-export class TestRectangle extends TestShape {
-
-    constructor(_json_) {
-        super(_json_);
-        if (_json_.width === undefined) { throw new Error() };
-        this.width = _json_.width;
-        if (_json_.height === undefined) { throw new Error() };
-        this.height = _json_.height;
-    }
-
-    resolve(tables) {
-        super.resolve(tables);
         
         
     }
 }
 
 
-/**
- * 这是个测试excel结构
- */
-export class TestTestExcelBean1 {
+export class GlobalConfig {
 
     constructor(_json_) {
-        if (_json_.x1 === undefined) { throw new Error() };
-        this.x1 = _json_.x1;
-        if (_json_.x2 === undefined) { throw new Error() };
-        this.x2 = _json_.x2;
-        if (_json_.x3 === undefined) { throw new Error() };
-        this.x3 = _json_.x3;
-        if (_json_.x4 === undefined) { throw new Error() };
-        this.x4 = _json_.x4;
+        if (_json_.base_coin === undefined) { throw new Error() };
+        this.baseCoin = _json_.base_coin;
+        if (_json_.base_enery === undefined) { throw new Error() };
+        this.baseEnery = _json_.base_enery;
+        if (_json_.energy_max === undefined) { throw new Error() };
+        this.energyMax = _json_.energy_max;
+        if (_json_.level_enery_consume === undefined) { throw new Error() };
+        this.levelEneryConsume = _json_.level_enery_consume;
+        if (_json_.coin_per_level === undefined) { throw new Error() };
+        this.coinPerLevel = _json_.coin_per_level;
+        if (_json_.first_clear_multiplier === undefined) { throw new Error() };
+        this.firstClearMultiplier = _json_.first_clear_multiplier;
+        if (_json_.energy_return_rate === undefined) { throw new Error() };
+        this.energyReturnRate = _json_.energy_return_rate;
+        if (_json_.ad_multiplier === undefined) { throw new Error() };
+        this.adMultiplier = _json_.ad_multiplier;
+        if (_json_.daily_chest_energy_reward === undefined) { throw new Error() };
+        this.dailyChestEnergyReward = new CommonIntRange(_json_.daily_chest_energy_reward);
     }
 
     resolve(tables) {
@@ -150,33 +104,16 @@ export class TestTestExcelBean1 {
         
         
         
+        
+        
+        
+        
+        this.dailyChestEnergyReward?.resolve(tables);
     }
 }
 
 
-/**
- * 这是个测试excel结构
- */
-export class TestTestExcelBean2 {
-
-    constructor(_json_) {
-        if (_json_.y1 === undefined) { throw new Error() };
-        this.y1 = _json_.y1;
-        if (_json_.y2 === undefined) { throw new Error() };
-        this.y2 = _json_.y2;
-        if (_json_.y3 === undefined) { throw new Error() };
-        this.y3 = _json_.y3;
-    }
-
-    resolve(tables) {
-        
-        
-        
-    }
-}
-
-
-export class UnitUnit {
+export class Unit {
 
     constructor(_json_) {
         if (_json_.id === undefined) { throw new Error() };
@@ -265,14 +202,14 @@ export class vector4 {
 /**
  * 角色单位
  */
-export class UnitTbUnit {
+export class TbUnit {
 
     constructor(_json_) {
         this._dataMap = new Map();
         this._dataList = [];
         for(var _json2_ of _json_) {
             let _v;
-            _v = new UnitUnit(_json2_);
+            _v = new Unit(_json2_);
             this._dataList.push(_v);
             this._dataMap.set(_v.id, _v);
         }
@@ -292,16 +229,78 @@ export class UnitTbUnit {
 }
 
 
+/**
+ * 全局配置
+ */
+export class TbGlobalConfig {
+
+    constructor(_json_) {
+        if (_json_.length != 1) throw new Error('table mode=one, but size != 1');
+        this._data = new GlobalConfig(_json_[0]);
+    }
+
+    getData() { return this._data; }
+
+    /**
+     * 基础金币值
+     */
+    get  baseCoin() { return this._data.baseCoin; }
+    /**
+     * 基础体力值
+     */
+    get  baseEnery() { return this._data.baseEnery; }
+    /**
+     * 体力上限
+     */
+    get  energyMax() { return this._data.energyMax; }
+    /**
+     * 推关消耗体力
+     */
+    get  levelEneryConsume() { return this._data.levelEneryConsume; }
+    /**
+     * 每关递增金币
+     */
+    get  coinPerLevel() { return this._data.coinPerLevel; }
+    /**
+     * 首通倍率
+     */
+    get  firstClearMultiplier() { return this._data.firstClearMultiplier; }
+    /**
+     * 体力返还比例
+     */
+    get  energyReturnRate() { return this._data.energyReturnRate; }
+    /**
+     * 广告倍率
+     */
+    get  adMultiplier() { return this._data.adMultiplier; }
+    /**
+     * 每日领取体力奖励范围
+     */
+    get  dailyChestEnergyReward() { return this._data.dailyChestEnergyReward; }
+
+    resolve(tables) {
+        this._data.resolve(tables);
+    }
+    
+}
+
+
 export class Tables {
     /**
      * 角色单位
      */
     get TbUnit() { return this._TbUnit;}
+    /**
+     * 全局配置
+     */
+    get TbGlobalConfig() { return this._TbGlobalConfig;}
 
     constructor(loader) {
-        this._TbUnit = new UnitTbUnit(loader('unit_tbunit'));
+        this._TbUnit = new TbUnit(loader('tbunit'));
+        this._TbGlobalConfig = new TbGlobalConfig(loader('tbglobalconfig'));
 
         this._TbUnit.resolve(this);
+        this._TbGlobalConfig.resolve(this);
     }
 }
 
