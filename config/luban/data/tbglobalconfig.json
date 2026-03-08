@@ -1,9 +1,7 @@
 [
   {
-    "base_coin": 150,
-    "base_enery": 150,
     "energy_max": 150,
-    "level_enery_consume": 10,
+    "level_energy_consume": 10,
     "coin_per_level": 5,
     "first_clear_multiplier": 3,
     "energy_return_rate": 0.3,

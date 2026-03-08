@@ -39,6 +39,11 @@ class ConfigTable {
         return this.dataList;
     }
 
+    /** 获取单例表数据（mode=one，仅一条记录），不存在返回 null */
+    getData() {
+        return this.dataList.length > 0 ? this.dataList[0] : null;
+    }
+
     /** 记录总数 */
     get count() {
         return this.dataList.length;

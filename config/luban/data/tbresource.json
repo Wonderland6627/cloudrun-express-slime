@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "name": "金币",
+    "default_value": 0,
+    "icon_path": "Assets/AssetRaw/UIRaw/Atlas/Common/icon_coin.png",
+    "desc": ""
+  },
+  {
+    "id": 2,
+    "name": "体力",
+    "default_value": 150,
+    "icon_path": "Assets/AssetRaw/UIRaw/Atlas/Common/icon_energy.png",
+    "desc": ""
+  },
+  {
+    "id": 3,
+    "name": "钻石",
+    "default_value": 0,
+    "icon_path": "Assets/AssetRaw/UIRaw/Atlas/Common/icon_diamond.png",
+    "desc": ""
+  }
+]

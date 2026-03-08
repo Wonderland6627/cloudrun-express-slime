@@ -1,7 +1,7 @@
 // 通关奖励结算服务层
 const cloudbaseDB = require('../utils/cloudbaseDB');
 const resourceService = require('./resourceService');
-const rewardConfig = require('../config/levelRewardConfig');
+const configManager = require('../config/luban/configManager');
 const { RESOURCE_TYPE, RESOURCE_CONFIG, RESOURCE_SOURCE } = require('../config/constants');
 
 /**
@@ -12,28 +12,34 @@ const { RESOURCE_TYPE, RESOURCE_CONFIG, RESOURCE_SOURCE } = require('../config/c
  * @returns {Promise<{ rewards: Array<{resourceType: number, amount: number, source: string}>, isFirstClear: boolean }>}
  */
 async function claimLevelReward(openid, levelId, watchedAd) {
+  const gc = configManager.tables.tbglobalconfig.getData();
+  if (!gc) throw new Error('TbGlobalConfig not loaded');
+
+  const coinRes = configManager.tables.tbresource.get(RESOURCE_TYPE.COIN);
+  if (!coinRes) throw new Error('TbResource COIN not found');
+
   const user = await cloudbaseDB.findUserByOpenID(openid);
   if (!user) throw new Error('User not found');
 
   const isFirstClear = levelId > (user.progressLevelID || 0);
 
   // coinReward = floor(baseCoin + coinPerLevel * (levelId - 1))
-  const coinReward = Math.floor(rewardConfig.baseCoin + rewardConfig.coinPerLevel * (levelId - 1));
+  const coinReward = Math.floor(coinRes.default_value + gc.coin_per_level * (levelId - 1));
 
   // energyReturn = floor(levelEnergyConsume * energyReturnRate)
-  const energyReturn = Math.floor(rewardConfig.levelEnergyConsume * rewardConfig.energyReturnRate);
+  const energyReturn = Math.floor(gc.level_energy_consume * gc.energy_return_rate);
 
   // firstClearCoin = floor(coinReward * firstClearMultiplier)
-  const firstClearCoin = isFirstClear ? Math.floor(coinReward * rewardConfig.firstClearMultiplier) : 0;
+  const firstClearCoin = isFirstClear ? Math.floor(coinReward * gc.first_clear_multiplier) : 0;
 
   // adBonusCoin = coinReward * (adMultiplier - 1)
-  const adBonusCoin = watchedAd ? coinReward * (rewardConfig.adMultiplier - 1) : 0;
+  const adBonusCoin = watchedAd ? coinReward * (gc.ad_multiplier - 1) : 0;
 
   const totalCoin = coinReward + firstClearCoin + adBonusCoin;
 
   const currentResources = user.resources || resourceService.getDefaultResources();
   const currentEnergy = currentResources[RESOURCE_TYPE.ENERGY] ?? RESOURCE_CONFIG[RESOURCE_TYPE.ENERGY].defaultValue;
-  const energyMax = RESOURCE_CONFIG[RESOURCE_TYPE.ENERGY].max;
+  const energyMax = gc.energy_max;
   const clampedEnergyReturn = Math.min(energyReturn, energyMax - currentEnergy);
   const finalEnergyReturn = Math.max(clampedEnergyReturn, 0);
 

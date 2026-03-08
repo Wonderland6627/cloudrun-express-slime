@@ -79,14 +79,10 @@ export class CommonIntRange {
 export class GlobalConfig {
 
     constructor(_json_) {
-        if (_json_.base_coin === undefined) { throw new Error() };
-        this.baseCoin = _json_.base_coin;
-        if (_json_.base_enery === undefined) { throw new Error() };
-        this.baseEnery = _json_.base_enery;
         if (_json_.energy_max === undefined) { throw new Error() };
         this.energyMax = _json_.energy_max;
-        if (_json_.level_enery_consume === undefined) { throw new Error() };
-        this.levelEneryConsume = _json_.level_enery_consume;
+        if (_json_.level_energy_consume === undefined) { throw new Error() };
+        this.levelEnergyConsume = _json_.level_energy_consume;
         if (_json_.coin_per_level === undefined) { throw new Error() };
         this.coinPerLevel = _json_.coin_per_level;
         if (_json_.first_clear_multiplier === undefined) { throw new Error() };
@@ -106,9 +102,32 @@ export class GlobalConfig {
         
         
         
-        
-        
         this.dailyChestEnergyReward?.resolve(tables);
+    }
+}
+
+
+export class Resource {
+
+    constructor(_json_) {
+        if (_json_.id === undefined) { throw new Error() };
+        this.id = _json_.id;
+        if (_json_.name === undefined) { throw new Error() };
+        this.name = _json_.name;
+        if (_json_.default_value === undefined) { throw new Error() };
+        this.defaultValue = _json_.default_value;
+        if (_json_.icon_path === undefined) { throw new Error() };
+        this.iconPath = _json_.icon_path;
+        if (_json_.desc === undefined) { throw new Error() };
+        this.desc = _json_.desc;
+    }
+
+    resolve(tables) {
+        
+        
+        
+        
+        
     }
 }
 
@@ -242,21 +261,13 @@ export class TbGlobalConfig {
     getData() { return this._data; }
 
     /**
-     * 基础金币值
-     */
-    get  baseCoin() { return this._data.baseCoin; }
-    /**
-     * 基础体力值
-     */
-    get  baseEnery() { return this._data.baseEnery; }
-    /**
      * 体力上限
      */
     get  energyMax() { return this._data.energyMax; }
     /**
      * 推关消耗体力
      */
-    get  levelEneryConsume() { return this._data.levelEneryConsume; }
+    get  levelEnergyConsume() { return this._data.levelEnergyConsume; }
     /**
      * 每关递增金币
      */
@@ -285,6 +296,36 @@ export class TbGlobalConfig {
 }
 
 
+/**
+ * 资源表
+ */
+export class TbResource {
+
+    constructor(_json_) {
+        this._dataMap = new Map();
+        this._dataList = [];
+        for(var _json2_ of _json_) {
+            let _v;
+            _v = new Resource(_json2_);
+            this._dataList.push(_v);
+            this._dataMap.set(_v.id, _v);
+        }
+    }
+
+    getDataMap() { return this._dataMap; }
+    getDataList() { return this._dataList; }
+
+    get(key) { return this._dataMap.get(key); }
+
+    resolve(tables) {
+        for(let  data of this._dataList) {
+            data.resolve(tables);
+        }
+    }
+
+}
+
+
 export class Tables {
     /**
      * 角色单位
@@ -294,13 +335,19 @@ export class Tables {
      * 全局配置
      */
     get TbGlobalConfig() { return this._TbGlobalConfig;}
+    /**
+     * 资源表
+     */
+    get TbResource() { return this._TbResource;}
 
     constructor(loader) {
         this._TbUnit = new TbUnit(loader('tbunit'));
         this._TbGlobalConfig = new TbGlobalConfig(loader('tbglobalconfig'));
+        this._TbResource = new TbResource(loader('tbresource'));
 
         this._TbUnit.resolve(this);
         this._TbGlobalConfig.resolve(this);
+        this._TbResource.resolve(this);
     }
 }
 

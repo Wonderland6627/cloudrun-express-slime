@@ -1,18 +1,50 @@
 // 应用常量配置
+const configManager = require('./luban/configManager');
+
+const RESOURCE_TYPE = {
+  COIN: 1,
+  ENERGY: 2,
+  DIAMOND: 3
+};
+
+const RESOURCE_KEY_MAP = { [RESOURCE_TYPE.COIN]: 'coin', [RESOURCE_TYPE.ENERGY]: 'energy', [RESOURCE_TYPE.DIAMOND]: 'diamond' };
+
+function buildResourceConfig() {
+  const gc = configManager.tables.tbglobalconfig?.getData();
+  const tbRes = configManager.tables.tbresource;
+  if (!tbRes || !gc) {
+    console.warn('[constants] Luban config not loaded, using fallback RESOURCE_CONFIG');
+    return {
+      1: { key: 'coin', defaultValue: 0, min: 0, max: null },
+      2: { key: 'energy', defaultValue: 150, min: 0, max: 150 },
+      3: { key: 'diamond', defaultValue: 0, min: 0, max: null }
+    };
+  }
+
+  const config = {};
+  for (const res of tbRes.getAll()) {
+    const isEnergy = res.id === RESOURCE_TYPE.ENERGY;
+    config[res.id] = {
+      key: RESOURCE_KEY_MAP[res.id] || res.name,
+      defaultValue: res.default_value,
+      min: 0,
+      max: isEnergy ? gc.energy_max : null
+    };
+  }
+  return config;
+}
+
 module.exports = {
-  // 数据库集合名称
   COLLECTIONS: {
     USER_GAME_INFOS: 'UserGameInfos',
     LEVELS: 'Levels'
   },
   
-  // 默认值
   DEFAULTS: {
     RANK_LIMIT: 100,
     DEFAULT_LEVEL_ID: 'c0a2d8e468439784021a265910ba40eb'
   },
   
-  // 响应码
   RESPONSE_CODE: {
     SUCCESS: 0,
     ERROR: -1,
@@ -22,18 +54,10 @@ module.exports = {
   },
   
   // 资源类型枚举（与客户端 ResourceType enum 一致）
-  RESOURCE_TYPE: {
-    COIN: 1,
-    ENERGY: 2,
-    DIAMOND: 3
-  },
+  RESOURCE_TYPE,
 
-  // 资源配置（每种资源的校验规则和默认值）
-  RESOURCE_CONFIG: {
-    1: { key: 'coin', defaultValue: 0, min: 0, max: null },
-    2: { key: 'energy', defaultValue: 150, min: 0, max: 150 },
-    3: { key: 'diamond', defaultValue: 0, min: 0, max: null }
-  },
+  // 资源配置（从 Luban TbResource + TbGlobalConfig 构建）
+  RESOURCE_CONFIG: buildResourceConfig(),
 
   // 资源来源枚举（合并原 CURRENCY_SOURCE + ENERGY_SOURCE）
   RESOURCE_SOURCE: {
