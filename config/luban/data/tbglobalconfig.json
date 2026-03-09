@@ -6,9 +6,6 @@
     "first_clear_multiplier": 3,
     "energy_return_rate": 0.3,
     "ad_multiplier": 2,
-    "daily_chest_energy_reward": {
-      "min": 30,
-      "max": 50
-    }
+    "daily_checkin_reward_id": 1001
   }
 ]

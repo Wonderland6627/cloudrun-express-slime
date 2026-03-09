@@ -1,0 +1,18 @@
+[
+  {
+    "id": 1001,
+    "name": "每日签到奖励",
+    "reward_items": [
+      {
+        "item_type": 1,
+        "item_id": 1,
+        "amount": 50
+      },
+      {
+        "item_type": 1,
+        "item_id": 2,
+        "amount": 30
+      }
+    ]
+  }
+]
