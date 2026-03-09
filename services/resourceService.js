@@ -51,7 +51,12 @@ async function updateResource(openid, resourceType, change, source) {
     throw new Error(`Insufficient ${config.key}. Current: ${currentValue}, Change: ${change}`);
   }
   if (config.max !== null && newValue > config.max) {
-    throw new Error(`${config.key} exceeds max(${config.max}). Current: ${currentValue}, Change: ${change}`);
+    change = config.max - currentValue;
+    newValue = config.max;
+    if (change <= 0) {
+      console.log(`[Resource] ${config.key} already at max(${config.max}), skip`);
+      return { resourceType, value: currentValue, change: 0 };
+    }
   }
 
   const updatedUser = await cloudbaseDB.incrementResource(openid, resourceType, change);
@@ -82,17 +87,22 @@ async function batchUpdateResources(openid, updates, extraSets = {}) {
 
     const config = RESOURCE_CONFIG[resourceType];
     const currentValue = currentResources[resourceType] ?? config.defaultValue;
-    const newValue = currentValue + change;
+    let actualChange = change;
+    const newValue = currentValue + actualChange;
 
     if (config.min !== null && newValue < config.min) {
-      throw new Error(`Insufficient ${config.key}. Current: ${currentValue}, Change: ${change}`);
+      throw new Error(`Insufficient ${config.key}. Current: ${currentValue}, Change: ${actualChange}`);
     }
     if (config.max !== null && newValue > config.max) {
-      throw new Error(`${config.key} exceeds max(${config.max}). Current: ${currentValue}, Change: ${change}`);
+      actualChange = config.max - currentValue;
+      if (actualChange <= 0) {
+        console.log(`[Resource] Batch: ${config.key} already at max(${config.max}), skip`);
+        continue;
+      }
     }
 
-    increments[resourceType] = (increments[resourceType] || 0) + change;
-    console.log(`[Resource] Batch: User ${openid} ${change > 0 ? '+' : ''}${change} ${config.key} from ${source}`);
+    increments[resourceType] = (increments[resourceType] || 0) + actualChange;
+    console.log(`[Resource] Batch: User ${openid} ${actualChange > 0 ? '+' : ''}${actualChange} ${config.key} from ${source}`);
   }
 
   if (Object.keys(increments).length === 0 && Object.keys(extraSets).length === 0) {

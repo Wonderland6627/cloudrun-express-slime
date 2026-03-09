@@ -7,6 +7,12 @@ const RESOURCE_TYPE = {
   DIAMOND: 3
 };
 
+// 物品类型枚举（与客户端 ItemType enum 一致）
+const ITEM_TYPE = {
+  RESOURCE: 1,
+  GOODS: 2,
+};
+
 const RESOURCE_KEY_MAP = { [RESOURCE_TYPE.COIN]: 'coin', [RESOURCE_TYPE.ENERGY]: 'energy', [RESOURCE_TYPE.DIAMOND]: 'diamond' };
 
 function buildResourceConfig() {
@@ -55,6 +61,9 @@ module.exports = {
   
   // 资源类型枚举（与客户端 ResourceType enum 一致）
   RESOURCE_TYPE,
+
+  // 物品类型枚举（与客户端 ItemType enum 一致）
+  ITEM_TYPE,
 
   // 资源配置（从 Luban TbResource + TbGlobalConfig 构建）
   RESOURCE_CONFIG: buildResourceConfig(),

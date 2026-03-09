@@ -10,6 +10,7 @@ const { validateCode } = require('../middlewares/validator');
 const minigameController = require('../controllers/minigameController');
 const resourceController = require('../controllers/resourceController');
 const levelRewardController = require('../controllers/levelRewardController');
+const dailyCheckinController = require('../controllers/dailyCheckinController');
 
 /**
  * POST /api/minigame/getCode2Session
@@ -83,6 +84,14 @@ router.post('/getResources',
 router.post('/claimLevelReward',
   authMiddleware,
   levelRewardController.claimLevelReward
+);
+
+/**
+ * POST /api/minigame/claimDailyCheckin
+ */
+router.post('/claimDailyCheckin',
+  authMiddleware,
+  dailyCheckinController.claimDailyCheckin
 );
 
 module.exports = router;
