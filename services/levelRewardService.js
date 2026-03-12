@@ -23,8 +23,8 @@ async function claimLevelReward(openid, levelId, watchedAd) {
 
   const isFirstClear = levelId > (user.progressLevelID || 0);
 
-  // coinReward = floor(baseCoin + coinPerLevel * (levelId - 1))
-  const coinReward = Math.floor(coinRes.default_value + gc.coin_per_level * (levelId - 1));
+  // coinReward = floor(baseCoin + coinPerLevel * levelId)
+  const coinReward = Math.floor(coinRes.default_value + gc.coin_per_level * levelId);
 
   // energyReturn = floor(levelEnergyConsume * energyReturnRate)
   const energyReturn = Math.floor(gc.level_energy_consume * gc.energy_return_rate);
