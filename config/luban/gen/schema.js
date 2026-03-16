@@ -8,6 +8,17 @@
 //------------------------------------------------------------------------------
 
 
+export const EItemType = Object.freeze({
+    /**
+     * 资源
+     */
+    RESOURCE: 1,
+    /**
+     * 物品
+     */
+    GOODS: 2,
+});
+
 export const EQuality = Object.freeze({
     /**
      * 普通
@@ -99,6 +110,28 @@ export class GlobalConfig {
         
         
         
+        
+        
+        
+        
+    }
+}
+
+
+export class Goods {
+
+    constructor(_json_) {
+        if (_json_.id === undefined) { throw new Error() };
+        this.id = _json_.id;
+        if (_json_.name === undefined) { throw new Error() };
+        this.name = _json_.name;
+        if (_json_.icon_path === undefined) { throw new Error() };
+        this.iconPath = _json_.icon_path;
+        if (_json_.desc === undefined) { throw new Error() };
+        this.desc = _json_.desc;
+    }
+
+    resolve(tables) {
         
         
         
@@ -394,6 +427,36 @@ export class TbReward {
 }
 
 
+/**
+ * 物品表
+ */
+export class TbGoods {
+
+    constructor(_json_) {
+        this._dataMap = new Map();
+        this._dataList = [];
+        for(var _json2_ of _json_) {
+            let _v;
+            _v = new Goods(_json2_);
+            this._dataList.push(_v);
+            this._dataMap.set(_v.id, _v);
+        }
+    }
+
+    getDataMap() { return this._dataMap; }
+    getDataList() { return this._dataList; }
+
+    get(key) { return this._dataMap.get(key); }
+
+    resolve(tables) {
+        for(let  data of this._dataList) {
+            data.resolve(tables);
+        }
+    }
+
+}
+
+
 export class Tables {
     /**
      * 角色单位
@@ -411,17 +474,23 @@ export class Tables {
      * 奖励表
      */
     get TbReward() { return this._TbReward;}
+    /**
+     * 物品表
+     */
+    get TbGoods() { return this._TbGoods;}
 
     constructor(loader) {
         this._TbUnit = new TbUnit(loader('tbunit'));
         this._TbGlobalConfig = new TbGlobalConfig(loader('tbglobalconfig'));
         this._TbResource = new TbResource(loader('tbresource'));
         this._TbReward = new TbReward(loader('tbreward'));
+        this._TbGoods = new TbGoods(loader('tbgoods'));
 
         this._TbUnit.resolve(this);
         this._TbGlobalConfig.resolve(this);
         this._TbResource.resolve(this);
         this._TbReward.resolve(this);
+        this._TbGoods.resolve(this);
     }
 }
 

@@ -1,0 +1,14 @@
+[
+  {
+    "id": 1001,
+    "name": "水晶石",
+    "icon_path": "Assets/AssetRaw/UIRaw/Atlas/Goods/icon_stone_blue.png",
+    "desc": ""
+  },
+  {
+    "id": 1002,
+    "name": "火晶石",
+    "icon_path": "Assets/AssetRaw/UIRaw/Atlas/Goods/icon_stone_red.png",
+    "desc": ""
+  }
+]
