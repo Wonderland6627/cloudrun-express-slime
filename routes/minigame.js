@@ -11,6 +11,7 @@ const minigameController = require('../controllers/minigameController');
 const resourceController = require('../controllers/resourceController');
 const levelRewardController = require('../controllers/levelRewardController');
 const dailyCheckinController = require('../controllers/dailyCheckinController');
+const levelChestController = require('../controllers/levelChestController');
 
 /**
  * POST /api/minigame/getCode2Session
@@ -92,6 +93,15 @@ router.post('/claimLevelReward',
 router.post('/claimDailyCheckin',
   authMiddleware,
   dailyCheckinController.claimDailyCheckin
+);
+
+/**
+ * POST /api/minigame/claimLevelChest
+ * Body: { chestLevelId: number }
+ */
+router.post('/claimLevelChest',
+  authMiddleware,
+  levelChestController.claimLevelChest
 );
 
 module.exports = router;
