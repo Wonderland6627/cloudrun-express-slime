@@ -140,6 +140,25 @@ export class Goods {
 }
 
 
+export class LevelChest {
+
+    constructor(_json_) {
+        if (_json_.id === undefined) { throw new Error() };
+        this.id = _json_.id;
+        if (_json_.level_id === undefined) { throw new Error() };
+        this.levelId = _json_.level_id;
+        if (_json_.reward_id === undefined) { throw new Error() };
+        this.rewardId = _json_.reward_id;
+    }
+
+    resolve(tables) {
+        
+        
+        
+    }
+}
+
+
 export class Resource {
 
     constructor(_json_) {
@@ -457,6 +476,36 @@ export class TbGoods {
 }
 
 
+/**
+ * 推关激励奖励
+ */
+export class TbLevelChest {
+
+    constructor(_json_) {
+        this._dataMap = new Map();
+        this._dataList = [];
+        for(var _json2_ of _json_) {
+            let _v;
+            _v = new LevelChest(_json2_);
+            this._dataList.push(_v);
+            this._dataMap.set(_v.id, _v);
+        }
+    }
+
+    getDataMap() { return this._dataMap; }
+    getDataList() { return this._dataList; }
+
+    get(key) { return this._dataMap.get(key); }
+
+    resolve(tables) {
+        for(let  data of this._dataList) {
+            data.resolve(tables);
+        }
+    }
+
+}
+
+
 export class Tables {
     /**
      * 角色单位
@@ -478,6 +527,10 @@ export class Tables {
      * 物品表
      */
     get TbGoods() { return this._TbGoods;}
+    /**
+     * 推关激励奖励
+     */
+    get TbLevelChest() { return this._TbLevelChest;}
 
     constructor(loader) {
         this._TbUnit = new TbUnit(loader('tbunit'));
@@ -485,12 +538,14 @@ export class Tables {
         this._TbResource = new TbResource(loader('tbresource'));
         this._TbReward = new TbReward(loader('tbreward'));
         this._TbGoods = new TbGoods(loader('tbgoods'));
+        this._TbLevelChest = new TbLevelChest(loader('tblevelchest'));
 
         this._TbUnit.resolve(this);
         this._TbGlobalConfig.resolve(this);
         this._TbResource.resolve(this);
         this._TbReward.resolve(this);
         this._TbGoods.resolve(this);
+        this._TbLevelChest.resolve(this);
     }
 }
 

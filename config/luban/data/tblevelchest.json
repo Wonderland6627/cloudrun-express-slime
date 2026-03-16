@@ -1,0 +1,17 @@
+[
+  {
+    "id": 1,
+    "level_id": 2,
+    "reward_id": 2001
+  },
+  {
+    "id": 2,
+    "level_id": 5,
+    "reward_id": 2002
+  },
+  {
+    "id": 3,
+    "level_id": 8,
+    "reward_id": 2003
+  }
+]
