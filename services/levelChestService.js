@@ -2,6 +2,7 @@
 const configManager = require('../config/luban/configManager');
 const cloudbaseDB = require('../utils/cloudbaseDB');
 const resourceService = require('./resourceService');
+const goodsService = require('./goodsService');
 const rewardService = require('./rewardService');
 const { RESOURCE_SOURCE } = require('../config/constants');
 const { AppError } = require('../middlewares/errorHandler');
@@ -10,7 +11,7 @@ const { AppError } = require('../middlewares/errorHandler');
  * 领取推关激励宝箱
  * @param {string} openid
  * @param {number} chestLevelId - 里程碑关卡ID（tblevelchest 表的 level_id）
- * @returns {Promise<{ rewards: Array, claimedLevelChests: number[] }>}
+ * @returns {Promise<{ rewards: Array, claimedLevelChests: number[], resources: Object, goods: Object }>}
  */
 async function claimLevelChest(openid, chestLevelId) {
   // 1. 校验配置存在
@@ -37,33 +38,49 @@ async function claimLevelChest(openid, chestLevelId) {
   }
 
   // 5. 解析奖励
-  const { resourceUpdates } = rewardService.resolveReward(milestone.reward_id);
-  const updates = resourceUpdates.map(u => ({
+  const { resourceUpdates, goodsUpdates } = rewardService.resolveReward(milestone.reward_id);
+
+  // 6. 原子更新：push chestLevelId + 增量资源
+  const _ = cloudbaseDB.command;
+  const resUpdates = resourceUpdates.map(u => ({
     resourceType: u.resourceType,
     change: u.change,
     source: RESOURCE_SOURCE.CHEST_REWARD,
   }));
-
-  // 6. 原子更新：push chestLevelId + 增量资源
-  const _ = cloudbaseDB.command;
-
-  const updatedResources = await resourceService.batchUpdateResources(openid, updates, {
+  const updatedResources = await resourceService.batchUpdateResources(openid, resUpdates, {
     claimedLevelChests: _.push([chestLevelId]),
   });
 
-  const rewards = resourceUpdates.map(u => ({
-    resourceType: u.resourceType,
-    amount: u.change,
+  // 7. 处理物品奖励
+  const gdsUpdates = goodsUpdates.map(u => ({
+    goodsId: u.goodsId,
+    change: u.change,
     source: RESOURCE_SOURCE.CHEST_REWARD,
   }));
+  const updatedGoods = gdsUpdates.length > 0
+    ? await goodsService.batchAddGoods(openid, gdsUpdates)
+    : undefined;
 
-  // 7. 重新读取最新的 claimedLevelChests
+  const rewards = [
+    ...resourceUpdates.map(u => ({
+      resourceType: u.resourceType,
+      amount: u.change,
+      source: RESOURCE_SOURCE.CHEST_REWARD,
+    })),
+    ...goodsUpdates.map(u => ({
+      goodsId: u.goodsId,
+      amount: u.change,
+      source: RESOURCE_SOURCE.CHEST_REWARD,
+    })),
+  ];
+
+  // 8. 重新读取最新的 claimedLevelChests
   const updatedUser = await cloudbaseDB.findUserByOpenID(openid);
   const updatedClaimed = updatedUser?.claimedLevelChests || [...claimed, chestLevelId];
 
   console.log(`[LevelChest] User ${openid} claimed level chest: chestLevelId=${chestLevelId}, rewardId=${milestone.reward_id}, items=${rewards.length}`);
 
-  return { rewards, claimedLevelChests: updatedClaimed, resources: updatedResources };
+  return { rewards, claimedLevelChests: updatedClaimed, resources: updatedResources, goods: updatedGoods };
 }
 
 module.exports = {

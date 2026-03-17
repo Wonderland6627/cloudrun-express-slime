@@ -141,13 +141,14 @@ async function incrementResource(openID, resourceTypeId, amount) {
 }
 
 /**
- * 一次原子操作同时 set 和 inc 多个字段（支持 resources 嵌套字段）
+ * 一次原子操作同时 set 和 inc 多个字段（支持 resources 和 goods 嵌套字段）
  * @param {string} openID
  * @param {Object} sets - 直接赋值字段 e.g. { progressLevelID: 5 }
  * @param {Object} resourceIncrements - resources 内的增量 e.g. { 1: 175, 2: 3 }
+ * @param {Object} [goodsIncrements] - goods 内的增量 e.g. { 1001: 2, 1002: 1 }
  * @returns {Promise<Object>} updated user document
  */
-async function batchUpdateAndIncrement(openID, sets, resourceIncrements) {
+async function batchUpdateAndIncrement(openID, sets, resourceIncrements, goodsIncrements = {}) {
   try {
     const db = getDB();
     const _ = db.command;
@@ -157,6 +158,11 @@ async function batchUpdateAndIncrement(openID, sets, resourceIncrements) {
     for (const [resourceTypeId, amount] of Object.entries(resourceIncrements)) {
       if (amount !== 0) {
         updateData[`resources.${resourceTypeId}`] = _.inc(amount);
+      }
+    }
+    for (const [goodsId, amount] of Object.entries(goodsIncrements)) {
+      if (amount !== 0) {
+        updateData[`goods.${goodsId}`] = _.inc(amount);
       }
     }
 
@@ -169,6 +175,38 @@ async function batchUpdateAndIncrement(openID, sets, resourceIncrements) {
     throw new Error('User not found after batch update');
   } catch (error) {
     console.error('batchUpdateAndIncrement error:', error);
+    throw error;
+  }
+}
+
+// ==================== 物品相关DAO方法（原子操作）====================
+
+/**
+ * 原子增减物品（操作 goods.{goodsId} 字段）
+ * @param {string} openID
+ * @param {number} goodsId - 物品ID
+ * @param {number} amount - 变化量（正数增加，负数减少）
+ * @returns {Promise<Object>} updated user document
+ */
+async function incrementGoods(openID, goodsId, amount) {
+  try {
+    const db = getDB();
+    const _ = db.command;
+    const collection = db.collection(COLLECTIONS.USER_GAME_INFOS);
+    const fieldPath = `goods.${goodsId}`;
+
+    await collection.where({ openID }).update({
+      [fieldPath]: _.inc(amount),
+      updatedAt: new Date()
+    });
+
+    const updatedResult = await collection.where({ openID }).get();
+    if (updatedResult.data && updatedResult.data.length > 0) {
+      return updatedResult.data[0];
+    }
+    throw new Error('User not found after goods update');
+  } catch (error) {
+    console.error('incrementGoods error:', error);
     throw error;
   }
 }
@@ -193,6 +231,7 @@ module.exports = {
   findUsersByCondition,
   findLevelById,
   incrementResource,
+  incrementGoods,
   batchUpdateAndIncrement,
   get command() { return getDB().command; },
   warmUp

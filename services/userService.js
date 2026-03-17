@@ -16,6 +16,7 @@ async function getUserGameInfo(openid) {
     userData = await cloudbaseDB.createUser({
       openID: openid,
       resources: getDefaultResources(),
+      goods: {},
       createdAt: now,
       updatedAt: now
     });
@@ -46,6 +47,7 @@ async function setUserGameInfo(openid, gameInfo) {
     return await cloudbaseDB.createUser({
       openID: openid,
       resources: getDefaultResources(),
+      goods: {},
       createdAt: now,
       updatedAt: now,
       ...cleanGameInfo
