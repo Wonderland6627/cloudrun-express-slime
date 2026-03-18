@@ -61,18 +61,11 @@ async function claimLevelChest(openid, chestLevelId) {
     ? await goodsService.batchAddGoods(openid, gdsUpdates)
     : undefined;
 
-  const rewards = [
-    ...resourceUpdates.map(u => ({
-      resourceType: u.resourceType,
-      amount: u.change,
-      source: RESOURCE_SOURCE.CHEST_REWARD,
-    })),
-    ...goodsUpdates.map(u => ({
-      goodsId: u.goodsId,
-      amount: u.change,
-      source: RESOURCE_SOURCE.CHEST_REWARD,
-    })),
-  ];
+  const rewards = rewardService.buildRewardEntries(
+    resourceUpdates,
+    goodsUpdates,
+    RESOURCE_SOURCE.CHEST_REWARD
+  );
 
   // 8. 重新读取最新的 claimedLevelChests
   const updatedUser = await cloudbaseDB.findUserByOpenID(openid);

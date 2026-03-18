@@ -35,18 +35,11 @@ async function claimDailyCheckin(openid) {
     ? await goodsService.batchAddGoods(openid, gdsUpdates)
     : undefined;
 
-  const rewards = [
-    ...resourceUpdates.map(u => ({
-      resourceType: u.resourceType,
-      amount: u.change,
-      source: RESOURCE_SOURCE.DAILY_CHECKIN,
-    })),
-    ...goodsUpdates.map(u => ({
-      goodsId: u.goodsId,
-      amount: u.change,
-      source: RESOURCE_SOURCE.DAILY_CHECKIN,
-    })),
-  ];
+  const rewards = rewardService.buildRewardEntries(
+    resourceUpdates,
+    goodsUpdates,
+    RESOURCE_SOURCE.DAILY_CHECKIN
+  );
 
   console.log(`[DailyCheckin] User ${openid} claimed daily checkin: rewardId=${rewardId}, items=${rewards.length}`);
 

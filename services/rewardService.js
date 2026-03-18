@@ -34,6 +34,35 @@ function resolveReward(rewardId) {
   return { reward, resourceUpdates, goodsUpdates };
 }
 
+/**
+ * 统一奖励条目（与客户端 RewardItemData 一致：itemType + itemId + amount + source）
+ * @param {Array<{ resourceType: number, change: number }>} resourceUpdates
+ * @param {Array<{ goodsId: number, change: number }>} goodsUpdates
+ * @param {string} source
+ * @returns {Array<{ itemType: number, itemId: number, amount: number, source: string }>}
+ */
+function buildRewardEntries(resourceUpdates, goodsUpdates, source) {
+  const items = [];
+  for (const u of resourceUpdates) {
+    items.push({
+      itemType: ITEM_TYPE.RESOURCE,
+      itemId: u.resourceType,
+      amount: u.change,
+      source,
+    });
+  }
+  for (const u of goodsUpdates) {
+    items.push({
+      itemType: ITEM_TYPE.GOODS,
+      itemId: u.goodsId,
+      amount: u.change,
+      source,
+    });
+  }
+  return items;
+}
+
 module.exports = {
   resolveReward,
+  buildRewardEntries,
 };

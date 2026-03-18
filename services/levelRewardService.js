@@ -2,14 +2,14 @@
 const cloudbaseDB = require('../utils/cloudbaseDB');
 const resourceService = require('./resourceService');
 const configManager = require('../config/luban/configManager');
-const { RESOURCE_TYPE, RESOURCE_CONFIG, RESOURCE_SOURCE } = require('../config/constants');
+const { RESOURCE_TYPE, RESOURCE_CONFIG, RESOURCE_SOURCE, ITEM_TYPE } = require('../config/constants');
 
 /**
  * 领取通关奖励（服务端统一结算）
  * @param {string} openid
  * @param {number} levelId
  * @param {boolean} watchedAd
- * @returns {Promise<{ rewards: Array<{resourceType: number, amount: number, source: string}>, isFirstClear: boolean }>}
+ * @returns {Promise<{ rewards: Array<{itemType: number, itemId: number, amount: number, source: string}>, isFirstClear: boolean }>}
  */
 async function claimLevelReward(openid, levelId, watchedAd) {
   const gc = configManager.tables.tbglobalconfig.getData();
@@ -55,18 +55,38 @@ async function claimLevelReward(openid, levelId, watchedAd) {
   }
 
   const rewards = [];
-  rewards.push({ resourceType: RESOURCE_TYPE.COIN, amount: coinReward, source: RESOURCE_SOURCE.LEVEL_REWARD });
+  rewards.push({
+    itemType: ITEM_TYPE.RESOURCE,
+    itemId: RESOURCE_TYPE.COIN,
+    amount: coinReward,
+    source: RESOURCE_SOURCE.LEVEL_REWARD,
+  });
 
   if (energyReturn > 0) {
-    rewards.push({ resourceType: RESOURCE_TYPE.ENERGY, amount: finalEnergyReturn, source: RESOURCE_SOURCE.LEVEL_REWARD });
+    rewards.push({
+      itemType: ITEM_TYPE.RESOURCE,
+      itemId: RESOURCE_TYPE.ENERGY,
+      amount: finalEnergyReturn,
+      source: RESOURCE_SOURCE.LEVEL_REWARD,
+    });
   }
 
   if (isFirstClear && firstClearCoin > 0) {
-    rewards.push({ resourceType: RESOURCE_TYPE.COIN, amount: firstClearCoin, source: RESOURCE_SOURCE.FIRST_CLEAR });
+    rewards.push({
+      itemType: ITEM_TYPE.RESOURCE,
+      itemId: RESOURCE_TYPE.COIN,
+      amount: firstClearCoin,
+      source: RESOURCE_SOURCE.FIRST_CLEAR,
+    });
   }
 
   if (watchedAd && adBonusCoin > 0) {
-    rewards.push({ resourceType: RESOURCE_TYPE.COIN, amount: adBonusCoin, source: RESOURCE_SOURCE.LEVEL_REWARD });
+    rewards.push({
+      itemType: ITEM_TYPE.RESOURCE,
+      itemId: RESOURCE_TYPE.COIN,
+      amount: adBonusCoin,
+      source: RESOURCE_SOURCE.LEVEL_REWARD,
+    });
   }
 
   console.log(`[LevelReward] User ${openid} claimed level ${levelId}: totalCoin=${totalCoin}, energy=${finalEnergyReturn}, isFirstClear=${isFirstClear}, watchedAd=${watchedAd}`);
