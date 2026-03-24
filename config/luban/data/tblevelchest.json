@@ -13,5 +13,20 @@
     "id": 3,
     "level_id": 8,
     "reward_id": 2003
+  },
+  {
+    "id": 4,
+    "level_id": 10,
+    "reward_id": 2004
+  },
+  {
+    "id": 5,
+    "level_id": 12,
+    "reward_id": 2005
+  },
+  {
+    "id": 6,
+    "level_id": 15,
+    "reward_id": 2006
   }
 ]

@@ -62,5 +62,53 @@
         "amount": 60
       }
     ]
+  },
+  {
+    "id": 2004,
+    "name": "推关宝箱4",
+    "reward_items": [
+      {
+        "item_type": 1,
+        "item_id": 1,
+        "amount": 100
+      },
+      {
+        "item_type": 1,
+        "item_id": 2,
+        "amount": 60
+      }
+    ]
+  },
+  {
+    "id": 2005,
+    "name": "推关宝箱5",
+    "reward_items": [
+      {
+        "item_type": 1,
+        "item_id": 1,
+        "amount": 100
+      },
+      {
+        "item_type": 1,
+        "item_id": 2,
+        "amount": 60
+      }
+    ]
+  },
+  {
+    "id": 2006,
+    "name": "推关宝箱6",
+    "reward_items": [
+      {
+        "item_type": 1,
+        "item_id": 1,
+        "amount": 100
+      },
+      {
+        "item_type": 1,
+        "item_id": 2,
+        "amount": 60
+      }
+    ]
   }
 ]
