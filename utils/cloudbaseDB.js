@@ -179,6 +179,36 @@ async function batchUpdateAndIncrement(openID, sets, resourceIncrements, goodsIn
   }
 }
 
+/**
+ * 直接设置资源值（操作 resources.{resourceTypeId} 字段）
+ * 解决 _.inc() 对不存在字段从 0 开始计算导致校验与实际不一致的问题
+ * @param {string} openID
+ * @param {number} resourceTypeId - 资源类型ID
+ * @param {number} value - 目标值（由服务层校验后计算得出）
+ * @returns {Promise<Object>} updated user document
+ */
+async function setResource(openID, resourceTypeId, value) {
+  try {
+    const db = getDB();
+    const collection = db.collection(COLLECTIONS.USER_GAME_INFOS);
+    const fieldPath = `resources.${resourceTypeId}`;
+
+    await collection.where({ openID }).update({
+      [fieldPath]: value,
+      updatedAt: new Date()
+    });
+
+    const updatedResult = await collection.where({ openID }).get();
+    if (updatedResult.data && updatedResult.data.length > 0) {
+      return updatedResult.data[0];
+    }
+    throw new Error('User not found after resource set');
+  } catch (error) {
+    console.error('setResource error:', error);
+    throw error;
+  }
+}
+
 // ==================== 物品相关DAO方法（原子操作）====================
 
 /**
@@ -231,6 +261,7 @@ module.exports = {
   findUsersByCondition,
   findLevelById,
   incrementResource,
+  setResource,
   incrementGoods,
   batchUpdateAndIncrement,
   get command() { return getDB().command; },

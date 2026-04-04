@@ -1,6 +1,7 @@
 // 统一资源服务层 —— 替代原 currencyService + energyService
 const cloudbaseDB = require('../utils/cloudbaseDB');
-const { RESOURCE_TYPE, RESOURCE_CONFIG } = require('../config/constants');
+const { RESOURCE_TYPE, RESOURCE_CONFIG, RESPONSE_CODE } = require('../config/constants');
+const { AppError } = require('../middlewares/errorHandler');
 
 /**
  * 获取用户所有资源
@@ -48,7 +49,10 @@ async function updateResource(openid, resourceType, change, source) {
   let newValue = currentValue + change;
 
   if (config.min !== null && newValue < config.min) {
-    throw new Error(`Insufficient ${config.key}. Current: ${currentValue}, Change: ${change}`);
+    throw new AppError(
+      `Insufficient ${config.key}. Current: ${currentValue}, Required: ${Math.abs(change)}`,
+      RESPONSE_CODE.RESOURCE_NOT_ENOUGH, 400
+    );
   }
   if (config.max !== null && newValue > config.max) {
     change = config.max - currentValue;
@@ -59,7 +63,7 @@ async function updateResource(openid, resourceType, change, source) {
     }
   }
 
-  const updatedUser = await cloudbaseDB.incrementResource(openid, resourceType, change);
+  const updatedUser = await cloudbaseDB.setResource(openid, resourceType, newValue);
   const finalValue = (updatedUser.resources && updatedUser.resources[resourceType]) ?? newValue;
 
   console.log(`[Resource] User ${openid} ${change > 0 ? 'added' : 'deducted'} ${Math.abs(change)} ${config.key} from ${source}. Current: ${finalValue}`);
@@ -91,7 +95,10 @@ async function batchUpdateResources(openid, updates, extraSets = {}) {
     const newValue = currentValue + actualChange;
 
     if (config.min !== null && newValue < config.min) {
-      throw new Error(`Insufficient ${config.key}. Current: ${currentValue}, Change: ${actualChange}`);
+      throw new AppError(
+        `Insufficient ${config.key}. Current: ${currentValue}, Required: ${Math.abs(actualChange)}`,
+        RESPONSE_CODE.RESOURCE_NOT_ENOUGH, 400
+      );
     }
     if (config.max !== null && newValue > config.max) {
       actualChange = config.max - currentValue;

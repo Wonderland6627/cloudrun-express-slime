@@ -56,7 +56,8 @@ module.exports = {
     ERROR: -1,
     UNAUTHORIZED: -2,
     NOT_FOUND: -3,
-    VALIDATION_ERROR: -4
+    VALIDATION_ERROR: -4,
+    RESOURCE_NOT_ENOUGH: -5
   },
   
   // 资源类型枚举（与客户端 ResourceType enum 一致）
