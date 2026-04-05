@@ -104,9 +104,12 @@ export class GlobalConfig {
         this.adMultiplier = _json_.ad_multiplier;
         if (_json_.daily_checkin_reward_id === undefined) { throw new Error() };
         this.dailyCheckinRewardId = _json_.daily_checkin_reward_id;
+        if (_json_.ad_reward_pack_ids === undefined) { throw new Error() };
+        { this.adRewardPackIds = []; for(let _ele0 of _json_.ad_reward_pack_ids) { let _e0; _e0 = _ele0; this.adRewardPackIds.push(_e0);}};
     }
 
     resolve(tables) {
+        
         
         
         
@@ -378,6 +381,10 @@ export class TbGlobalConfig {
      * 每日签到奖励id
      */
     get  dailyCheckinRewardId() { return this._data.dailyCheckinRewardId; }
+    /**
+     * 广告礼包ID
+     */
+    get  adRewardPackIds() { return this._data.adRewardPackIds; }
 
     resolve(tables) {
         this._data.resolve(tables);

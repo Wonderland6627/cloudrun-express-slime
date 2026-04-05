@@ -110,5 +110,37 @@
         "amount": 60
       }
     ]
+  },
+  {
+    "id": 3001,
+    "name": "广告礼包1",
+    "reward_items": [
+      {
+        "item_type": 1,
+        "item_id": 1,
+        "amount": 30
+      },
+      {
+        "item_type": 1,
+        "item_id": 2,
+        "amount": 50
+      }
+    ]
+  },
+  {
+    "id": 3002,
+    "name": "广告礼包2",
+    "reward_items": [
+      {
+        "item_type": 1,
+        "item_id": 1,
+        "amount": 50
+      },
+      {
+        "item_type": 1,
+        "item_id": 2,
+        "amount": 80
+      }
+    ]
   }
 ]
