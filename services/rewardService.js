@@ -1,4 +1,5 @@
 // 通用奖励解析服务（内部使用，不对外暴露接口）
+const { logger } = require('../utils/logger');
 const configManager = require('../config/luban/configManager');
 const { ITEM_TYPE } = require('../config/constants');
 
@@ -28,7 +29,7 @@ function resolveReward(rewardId) {
         });
         break;
       default:
-        console.warn(`[RewardService] Unknown item_type: ${entry.item_type}, rewardId: ${rewardId}`);
+        logger.warn(`[RewardService] Unknown item_type: ${entry.item_type}, rewardId: ${rewardId}`);
     }
   }
   return { reward, resourceUpdates, goodsUpdates };

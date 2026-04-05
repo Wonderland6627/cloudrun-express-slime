@@ -1,4 +1,5 @@
 // 通关奖励结算服务层
+const { logger } = require('../utils/logger');
 const cloudbaseDB = require('../utils/cloudbaseDB');
 const resourceService = require('./resourceService');
 const configManager = require('../config/luban/configManager');
@@ -89,7 +90,7 @@ async function claimLevelReward(openid, levelId, watchedAd) {
     });
   }
 
-  console.log(`[LevelReward] User ${openid} claimed level ${levelId}: totalCoin=${totalCoin}, energy=${finalEnergyReturn}, isFirstClear=${isFirstClear}, watchedAd=${watchedAd}`);
+  logger.info(`[LevelReward] Claimed level ${levelId}: totalCoin=${totalCoin}, energy=${finalEnergyReturn}, isFirstClear=${isFirstClear}, watchedAd=${watchedAd}`, { openid });
 
   return { rewards, isFirstClear };
 }

@@ -1,4 +1,5 @@
 // 应用常量配置
+const { logger } = require('../utils/logger');
 const configManager = require('./luban/configManager');
 
 const RESOURCE_TYPE = {
@@ -19,7 +20,7 @@ function buildResourceConfig() {
   const gc = configManager.tables.tbglobalconfig?.getData();
   const tbRes = configManager.tables.tbresource;
   if (!tbRes || !gc) {
-    console.warn('[constants] Luban config not loaded, using fallback RESOURCE_CONFIG');
+    logger.warn('[constants] Luban config not loaded, using fallback RESOURCE_CONFIG');
     return {
       1: { key: 'coin', defaultValue: 0, min: 0, max: null },
       2: { key: 'energy', defaultValue: 150, min: 0, max: 150 },

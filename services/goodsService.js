@@ -1,5 +1,6 @@
 // 物品服务层 —— 管理 goods 类型物品的增减
 const cloudbaseDB = require('../utils/cloudbaseDB');
+const { logger } = require('../utils/logger');
 const configManager = require('../config/luban/configManager');
 
 /**
@@ -40,7 +41,7 @@ async function addGoods(openid, goodsId, amount, source) {
   const updatedUser = await cloudbaseDB.incrementGoods(openid, goodsId, amount);
   const finalValue = (updatedUser.goods && updatedUser.goods[goodsId]) ?? amount;
 
-  console.log(`[Goods] User ${openid} +${amount} goods(${goodsId}) from ${source}. Current: ${finalValue}`);
+  logger.info(`[Goods] +${amount} goods(${goodsId}) from ${source}. Current: ${finalValue}`, { openid });
   return { goodsId, value: finalValue, change: amount };
 }
 
@@ -69,7 +70,7 @@ async function consumeGoods(openid, goodsId, amount, source) {
   const updatedUser = await cloudbaseDB.incrementGoods(openid, goodsId, -amount);
   const finalValue = (updatedUser.goods && updatedUser.goods[goodsId]) ?? (currentValue - amount);
 
-  console.log(`[Goods] User ${openid} -${amount} goods(${goodsId}) from ${source}. Current: ${finalValue}`);
+  logger.info(`[Goods] -${amount} goods(${goodsId}) from ${source}. Current: ${finalValue}`, { openid });
   return { goodsId, value: finalValue, change: -amount };
 }
 
@@ -88,7 +89,7 @@ async function batchAddGoods(openid, updates, extraSets = {}) {
     if (change <= 0) continue;
 
     increments[goodsId] = (increments[goodsId] || 0) + change;
-    console.log(`[Goods] Batch: User ${openid} +${change} goods(${goodsId}) from ${source}`);
+    logger.info(`[Goods] Batch: +${change} goods(${goodsId}) from ${source}`, { openid });
   }
 
   if (Object.keys(increments).length === 0 && Object.keys(extraSets).length === 0) {

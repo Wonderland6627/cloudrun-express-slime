@@ -1,5 +1,6 @@
 // CloudBase 文档型数据库工具类（DAO层）
 // 核心优化：延迟初始化 —— @cloudbase/node-sdk 仅在首次数据库操作时加载，不阻塞服务启动
+const { logger } = require('./logger');
 const dbConfig = require('../config/database');
 const { COLLECTIONS } = require('../config/constants');
 
@@ -15,12 +16,12 @@ function getDB() {
   const envId = dbConfig.getEnvId();
   const initConfig = dbConfig.getAuthConfig();
 
-  console.log(`[CloudBase DB] Lazy init... env: ${envId || '(default)'}, auth: ${initConfig.secretId ? 'SecretKey' : 'ServiceRole'}`);
+  logger.info(`[CloudBase DB] Lazy init... env: ${envId || '(default)'}, auth: ${initConfig.secretId ? 'SecretKey' : 'ServiceRole'}`);
 
   const app = cloudbase.init(initConfig);
   _db = app.database();
 
-  console.log('[CloudBase DB] Initialized successfully');
+  logger.info('[CloudBase DB] Initialized successfully');
   return _db;
 }
 
@@ -31,7 +32,7 @@ function warmUp() {
   try {
     getDB();
   } catch (e) {
-    console.warn('[CloudBase DB] Warm-up failed:', e.message);
+    logger.warn('[CloudBase DB] Warm-up failed:', { error: e.message });
   }
 }
 
@@ -46,7 +47,7 @@ async function findUserByOpenID(openID) {
 
     return (result.data && result.data.length > 0) ? result.data[0] : null;
   } catch (error) {
-    console.error('findUserByOpenID error:', error);
+    logger.error('findUserByOpenID error', { openID, error: error.message });
     throw error;
   }
 }
@@ -64,7 +65,7 @@ async function createUser(userData) {
     const addResult = await db.collection(COLLECTIONS.USER_GAME_INFOS).add(dataToInsert);
     return { _id: addResult.id, ...dataToInsert };
   } catch (error) {
-    console.error('createUser error:', error);
+    logger.error('createUser error', { openID: userData?.openID, error: error.message });
     throw error;
   }
 }
@@ -83,7 +84,7 @@ async function updateUser(openID, updateData) {
     }
     throw new Error('User not found after update');
   } catch (error) {
-    console.error('updateUser error:', error);
+    logger.error('updateUser error', { openID, error: error.message });
     throw error;
   }
 }
@@ -103,7 +104,7 @@ async function findUsersByCondition(condition, options = {}) {
     const result = await query.get();
     return result.data || [];
   } catch (error) {
-    console.error('findUsersByCondition error:', error);
+    logger.error('findUsersByCondition error', { error: error.message });
     throw error;
   }
 }
@@ -135,7 +136,7 @@ async function incrementResource(openID, resourceTypeId, amount) {
     }
     throw new Error('User not found after resource update');
   } catch (error) {
-    console.error('incrementResource error:', error);
+    logger.error('incrementResource error', { openID, resourceTypeId, error: error.message });
     throw error;
   }
 }
@@ -174,7 +175,7 @@ async function batchUpdateAndIncrement(openID, sets, resourceIncrements, goodsIn
     }
     throw new Error('User not found after batch update');
   } catch (error) {
-    console.error('batchUpdateAndIncrement error:', error);
+    logger.error('batchUpdateAndIncrement error', { openID, error: error.message });
     throw error;
   }
 }
@@ -204,7 +205,7 @@ async function setResource(openID, resourceTypeId, value) {
     }
     throw new Error('User not found after resource set');
   } catch (error) {
-    console.error('setResource error:', error);
+    logger.error('setResource error', { openID, resourceTypeId, error: error.message });
     throw error;
   }
 }
@@ -236,7 +237,7 @@ async function incrementGoods(openID, goodsId, amount) {
     }
     throw new Error('User not found after goods update');
   } catch (error) {
-    console.error('incrementGoods error:', error);
+    logger.error('incrementGoods error', { openID, goodsId, error: error.message });
     throw error;
   }
 }
@@ -249,7 +250,7 @@ async function findLevelById(levelId) {
     const result = await db.collection(COLLECTIONS.LEVELS).doc(levelId).get();
     return result.data || null;
   } catch (error) {
-    console.error('findLevelById error:', error);
+    logger.error('findLevelById error', { levelId, error: error.message });
     throw error;
   }
 }

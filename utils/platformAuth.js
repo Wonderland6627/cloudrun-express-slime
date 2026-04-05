@@ -1,5 +1,6 @@
 // 平台认证抽象层 - 支持微信、抖音、B站等不同平台
 const axios = require('axios');
+const { logger } = require('./logger');
 
 // 平台类型枚举
 const PLATFORM_TYPES = {
@@ -47,7 +48,7 @@ class WeChatAuth {
         platform: this.platform
       };
     } catch (error) {
-      console.error('WeChat code2Session error:', error.message);
+      logger.error('WeChat code2Session error', { error: error.message });
       throw error;
     }
   }

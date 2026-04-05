@@ -1,5 +1,6 @@
 // 统一资源服务层 —— 替代原 currencyService + energyService
 const cloudbaseDB = require('../utils/cloudbaseDB');
+const { logger } = require('../utils/logger');
 const { RESOURCE_TYPE, RESOURCE_CONFIG, RESPONSE_CODE } = require('../config/constants');
 const { AppError } = require('../middlewares/errorHandler');
 
@@ -58,7 +59,7 @@ async function updateResource(openid, resourceType, change, source) {
     change = config.max - currentValue;
     newValue = config.max;
     if (change <= 0) {
-      console.log(`[Resource] ${config.key} already at max(${config.max}), skip`);
+      logger.info(`[Resource] ${config.key} already at max(${config.max}), skip`, { openid });
       return { resourceType, value: currentValue, change: 0 };
     }
   }
@@ -66,7 +67,7 @@ async function updateResource(openid, resourceType, change, source) {
   const updatedUser = await cloudbaseDB.setResource(openid, resourceType, newValue);
   const finalValue = (updatedUser.resources && updatedUser.resources[resourceType]) ?? newValue;
 
-  console.log(`[Resource] User ${openid} ${change > 0 ? 'added' : 'deducted'} ${Math.abs(change)} ${config.key} from ${source}. Current: ${finalValue}`);
+  logger.info(`[Resource] ${change > 0 ? 'added' : 'deducted'} ${Math.abs(change)} ${config.key} from ${source}. Current: ${finalValue}`, { openid });
 
   return { resourceType, value: finalValue, change };
 }
@@ -103,13 +104,13 @@ async function batchUpdateResources(openid, updates, extraSets = {}) {
     if (config.max !== null && newValue > config.max) {
       actualChange = config.max - currentValue;
       if (actualChange <= 0) {
-        console.log(`[Resource] Batch: ${config.key} already at max(${config.max}), skip`);
+        logger.info(`[Resource] Batch: ${config.key} already at max(${config.max}), skip`, { openid });
         continue;
       }
     }
 
     increments[resourceType] = (increments[resourceType] || 0) + actualChange;
-    console.log(`[Resource] Batch: User ${openid} ${actualChange > 0 ? '+' : ''}${actualChange} ${config.key} from ${source}`);
+    logger.info(`[Resource] Batch: ${actualChange > 0 ? '+' : ''}${actualChange} ${config.key} from ${source}`, { openid });
   }
 
   if (Object.keys(increments).length === 0 && Object.keys(extraSets).length === 0) {

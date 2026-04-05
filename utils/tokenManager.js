@@ -1,5 +1,6 @@
 // Token管理器 - 使用标准JWT库生成和验证认证token
 const jwt = require('jsonwebtoken');
+const { logger } = require('./logger');
 
 // Token配置
 const TOKEN_SECRET = process.env.TOKEN_SECRET || 'default-secret-key-change-in-production';
@@ -44,11 +45,11 @@ function verifyToken(token) {
   } catch (error) {
     // JWT验证失败（签名错误、过期、格式错误等）
     if (error.name === 'TokenExpiredError') {
-      console.error('Token expired:', error.expiredAt);
+      logger.error('Token expired', { expiredAt: error.expiredAt });
     } else if (error.name === 'JsonWebTokenError') {
-      console.error('Invalid token:', error.message);
+      logger.error('Invalid token', { error: error.message });
     } else {
-      console.error('Token verification error:', error.message);
+      logger.error('Token verification error', { error: error.message });
     }
     return null;
   }

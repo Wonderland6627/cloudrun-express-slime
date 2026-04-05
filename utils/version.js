@@ -3,6 +3,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { logger } = require('./logger');
 
 // 获取构建时间（部署时间）
 const buildTime = new Date().toISOString();
@@ -14,7 +15,7 @@ try {
   const packageData = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
   packageVersion = packageData.version || '0.0.0';
 } catch (error) {
-  console.warn('Failed to read package.json version:', error.message);
+  logger.warn('Failed to read package.json version', { error: error.message });
 }
 
 /**

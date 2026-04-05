@@ -1,4 +1,5 @@
 // 每日签到服务层
+const { logger } = require('../utils/logger');
 const configManager = require('../config/luban/configManager');
 const resourceService = require('./resourceService');
 const goodsService = require('./goodsService');
@@ -41,7 +42,7 @@ async function claimDailyCheckin(openid) {
     RESOURCE_SOURCE.DAILY_CHECKIN
   );
 
-  console.log(`[DailyCheckin] User ${openid} claimed daily checkin: rewardId=${rewardId}, items=${rewards.length}`);
+  logger.info(`[DailyCheckin] Claimed daily checkin: rewardId=${rewardId}, items=${rewards.length}`, { openid });
 
   return { rewards, resources: updatedResources, goods: updatedGoods };
 }

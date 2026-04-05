@@ -1,4 +1,5 @@
 // 广告礼包领取服务
+const { logger } = require('../utils/logger');
 const configManager = require('../config/luban/configManager');
 const resourceService = require('./resourceService');
 const goodsService = require('./goodsService');
@@ -50,7 +51,7 @@ async function claimAdsGiftPack(openid, rewardId) {
     RESOURCE_SOURCE.AD_REWARD
   );
 
-  console.log(`[AdsGiftPack] User ${openid} claimed ads gift pack: rewardId=${rewardId}, items=${rewards.length}`);
+  logger.info(`[AdsGiftPack] Claimed ads gift pack: rewardId=${rewardId}, items=${rewards.length}`, { openid });
 
   return { rewards, resources: updatedResources, goods: updatedGoods };
 }

@@ -1,4 +1,5 @@
 // 推关激励宝箱服务层
+const { logger } = require('../utils/logger');
 const configManager = require('../config/luban/configManager');
 const cloudbaseDB = require('../utils/cloudbaseDB');
 const resourceService = require('./resourceService');
@@ -71,7 +72,7 @@ async function claimLevelChest(openid, chestLevelId) {
   const updatedUser = await cloudbaseDB.findUserByOpenID(openid);
   const updatedClaimed = updatedUser?.claimedLevelChests || [...claimed, chestLevelId];
 
-  console.log(`[LevelChest] User ${openid} claimed level chest: chestLevelId=${chestLevelId}, rewardId=${milestone.reward_id}, items=${rewards.length}`);
+  logger.info(`[LevelChest] Claimed level chest: chestLevelId=${chestLevelId}, rewardId=${milestone.reward_id}, items=${rewards.length}`, { openid });
 
   return { rewards, claimedLevelChests: updatedClaimed, resources: updatedResources, goods: updatedGoods };
 }

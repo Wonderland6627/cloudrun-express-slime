@@ -195,7 +195,7 @@ const httpLogger = {
     // 记录请求开始时间
     const startTime = Date.now();
     
-    // 1️⃣ 立即记录请求日志
+    // 1️⃣ 立即记录请求日志（auth中间件尚未执行，openid可能不可用）
     logger.http('HTTP Request', {
       method: req.method,
       url: req.originalUrl || req.url,
@@ -205,7 +205,7 @@ const httpLogger = {
       body: req.body,
       headers: {
         'content-type': req.get('content-type'),
-        'authorization': req.get('authorization') ? '[PRESENT]' : undefined // 不记录完整 token
+        'authorization': req.get('authorization') ? '[PRESENT]' : undefined
       }
     });
     
@@ -217,13 +217,13 @@ const httpLogger = {
       // 计算响应时间
       const responseTime = Date.now() - startTime;
       
-      // 2️⃣ 记录响应日志（完整内容）
+      // 2️⃣ 记录响应日志（auth中间件已执行，可获取openid）
       logger.http('HTTP Response', {
         method: req.method,
         url: req.originalUrl || req.url,
         status: res.statusCode,
         responseTime: `${responseTime}ms`,
-        // 完整的响应数据
+        openid: req.user?.openid,
         response: data
       });
       

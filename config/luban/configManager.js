@@ -10,6 +10,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { logger } = require('../../utils/logger');
 
 const DATA_DIR = path.join(__dirname, 'data');
 
@@ -62,7 +63,7 @@ class ConfigManager {
      */
     load(dataDir = DATA_DIR) {
         if (!fs.existsSync(dataDir)) {
-            console.warn(`[ConfigManager] data directory not found: ${dataDir}`);
+            logger.warn(`[ConfigManager] data directory not found: ${dataDir}`);
             return this;
         }
 
@@ -74,7 +75,7 @@ class ConfigManager {
                 const raw = fs.readFileSync(filePath, 'utf-8');
                 this._tables[name] = new ConfigTable(name, JSON.parse(raw));
             } catch (e) {
-                console.error(`[ConfigManager] Failed to load table "${name}": ${e.message}`);
+                logger.error(`[ConfigManager] Failed to load table "${name}"`, { error: e.message });
             }
         }
 

@@ -4,6 +4,7 @@ const startTime = Date.now();
 
 var app = require('../app');
 var http = require('http');
+var { logger } = require('../utils/logger');
 
 var port = parseInt(process.env.PORT, 10) || 3000;
 app.set('port', port);
@@ -19,11 +20,11 @@ function onError(error) {
 
   switch (error.code) {
     case 'EACCES':
-      console.error(`Port ${port} requires elevated privileges`);
+      logger.error(`Port ${port} requires elevated privileges`);
       process.exit(1);
       break;
     case 'EADDRINUSE':
-      console.error(`Port ${port} is already in use`);
+      logger.error(`Port ${port} is already in use`);
       process.exit(1);
       break;
     default:
@@ -34,14 +35,14 @@ function onError(error) {
 function onListening() {
   var addr = server.address();
   var elapsed = Date.now() - startTime;
-  console.log(`Server listening on port ${addr.port} (${elapsed}ms)`);
+  logger.info(`Server listening on port ${addr.port} (${elapsed}ms)`);
 
   // 后台异步预热数据库连接，不阻塞健康检查响应
   setImmediate(() => {
     try {
       require('../utils/cloudbaseDB').warmUp();
     } catch (e) {
-      console.warn('[DB] Background warm-up failed:', e.message);
+      logger.warn('[DB] Background warm-up failed', { error: e.message });
     }
   });
 }
