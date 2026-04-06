@@ -5,6 +5,7 @@ const router = express.Router();
 // 中间件
 const { authMiddleware, optionalAuthMiddleware } = require('../middlewares/auth');
 const { validateCode } = require('../middlewares/validator');
+const { testModeMiddleware } = require('../middlewares/testMode');
 
 // 控制器
 const minigameController = require('../controllers/minigameController');
@@ -112,6 +113,16 @@ router.post('/claimLevelChest',
 router.post('/claimAdsGiftPack',
   authMiddleware,
   adsGiftPackController.claimAdsGiftPack
+);
+
+/**
+ * POST /api/minigame/debugSetUserGameInfo
+ * 仅测试模式可用，覆盖用户游戏信息
+ */
+router.post('/debugSetUserGameInfo',
+  authMiddleware,
+  testModeMiddleware,
+  minigameController.debugSetUserGameInfo
 );
 
 module.exports = router;

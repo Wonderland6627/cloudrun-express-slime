@@ -84,6 +84,19 @@ async function getUserRankList(req, res, next) {
 }
 
 /**
+ * [DEBUG] 覆盖用户游戏信息（仅测试模式可用）
+ */
+async function debugSetUserGameInfo(req, res, next) {
+  try {
+    const openid = req.user.openid;
+    const result = await userService.setUserGameInfo(openid, req.body);
+    return success(res, result, 'debug update user game info success');
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
  * 获取关卡配置
  */
 async function getLevelsConfig(req, res, next) {
@@ -106,6 +119,7 @@ module.exports = {
   getUserWXContext,
   getUserGameInfo,
   setUserGameInfo,
+  debugSetUserGameInfo,
   getUserRankList,
   getLevelsConfig
 };
