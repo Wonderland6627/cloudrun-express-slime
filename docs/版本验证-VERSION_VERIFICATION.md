@@ -156,6 +156,6 @@ console.log('Custom Config:', process.env.CUSTOM_CONFIG);
 
 ## 🔗 相关文档
 
-- [部署指南](./DEPLOYMENT_GUIDE.md)
-- [API测试指南](./TEST_API.md)
+- [部署指南](./部署指南-DEPLOYMENT_GUIDE.md)
+- [API测试指南](./接口测试-TEST_API.md)
 

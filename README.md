@@ -15,7 +15,7 @@ utils/            # 工具层 - 数据库操作、第三方API
 config/           # 配置层 - 统一配置管理
 ```
 
-详细架构说明请查看：[架构使用文档](./docs/ARCHITECTURE_GUIDE.md)
+详细文档索引请查看：[文档索引](./docs/文档索引-服务端.md)
 
 ## 🚀 快速开始
 
@@ -43,18 +43,18 @@ WX_SECRET=your-wechat-secret
 ## 📚 文档
 
 ### 核心文档
-- [架构使用文档](./docs/ARCHITECTURE_GUIDE.md) - 标准架构使用指南
-- [快速开始](./docs/QUICK_START.md) - 项目快速开始
-- [API测试文档](./docs/TEST_API.md) - API接口测试指南
-- [部署指南](./docs/DEPLOYMENT_GUIDE.md) - 部署到腾讯云托管
+- [文档索引](./docs/文档索引-服务端.md) - 服务端文档导航
+- [快速开始](./docs/快速开始-QUICK_START.md) - 项目快速开始
+- [API测试文档](./docs/接口测试-TEST_API.md) - API接口测试指南
+- [部署指南](./docs/部署指南-DEPLOYMENT_GUIDE.md) - 部署到腾讯云托管
 
 ### 配置文档
-- [环境配置](./docs/ENV_SETUP.md) - 环境变量配置说明
-- [CloudBase配置](./docs/CLOUDBASE_CONFIG.md) - CloudBase数据库配置
-- [数据库连接说明](./docs/DATABASE_CONNECTION_EXPLAINED.md) - 数据库连接详解
+- [环境配置](./docs/环境配置-ENV_SETUP.md) - 环境变量配置说明
+- [CloudBase配置](./docs/CloudBase配置-CLOUDBASE_CONFIG.md) - CloudBase数据库配置
+- [数据库连接说明](./docs/数据库连接说明-DATABASE_CONNECTION.md) - 数据库连接详解
 
 ### 其他文档
-- [版本验证](./docs/VERSION_VERIFICATION.md) - 版本验证方法
+- [版本验证](./docs/版本验证-VERSION_VERIFICATION.md) - 版本验证方法
 
 ## 📋 API接口
 

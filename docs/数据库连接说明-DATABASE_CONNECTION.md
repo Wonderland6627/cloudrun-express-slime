@@ -203,7 +203,7 @@ console.log('Using Service Role:', !process.env.TCB_SECRET_ID && !process.env.TC
 
 ## 📚 相关文档
 
-- [CloudBase 数据库配置指南](./CLOUDBASE_CONFIG.md)
-- [部署指南](./DEPLOYMENT_GUIDE.md)
-- [环境变量配置](./ENV_SETUP.md)
+- [CloudBase 数据库配置指南](./CloudBase配置-CLOUDBASE_CONFIG.md)
+- [部署指南](./部署指南-DEPLOYMENT_GUIDE.md)
+- [环境变量配置](./环境配置-ENV_SETUP.md)
 
