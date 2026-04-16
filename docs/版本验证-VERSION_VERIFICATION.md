@@ -10,6 +10,10 @@
 
 ```bash
 curl https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/version
+curl https://express-slime-dev-216111-7-1352845565.sh.run.tcloudbase.com/api/version
+
+curl https://piratecat.top/api/version
+curl https://piratecat.top/dev/api/version
 ```
 
 ### 2. 返回示例
