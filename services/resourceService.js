@@ -13,7 +13,7 @@ async function getResources(openid) {
   const userData = await cloudbaseDB.findUserByOpenID(openid);
   if (!userData) throw new Error('User not found');
 
-  return userData.resources || getDefaultResources();
+  return normalizeResources(userData.resources);
 }
 
 /**
@@ -45,7 +45,9 @@ async function updateResource(openid, resourceType, change, source) {
   const userData = await cloudbaseDB.findUserByOpenID(openid);
   if (!userData) throw new Error('User not found');
 
-  const currentResources = userData.resources || getDefaultResources();
+  const rawResources = userData.resources || {};
+  const currentResources = normalizeResources(rawResources);
+  const hasCurrentResourceField = hasResourceField(rawResources, resourceType);
   const currentValue = currentResources[resourceType] ?? config.defaultValue;
   let newValue = currentValue + change;
 
@@ -59,6 +61,9 @@ async function updateResource(openid, resourceType, change, source) {
     change = config.max - currentValue;
     newValue = config.max;
     if (change <= 0) {
+      if (!hasCurrentResourceField) {
+        await cloudbaseDB.setResource(openid, resourceType, currentValue);
+      }
       logger.info(`[Resource] ${config.key} already at max(${config.max}), skip`, { openid });
       return { resourceType, value: currentValue, change: 0 };
     }
@@ -83,8 +88,11 @@ async function batchUpdateResources(openid, updates, extraSets = {}) {
   const userData = await cloudbaseDB.findUserByOpenID(openid);
   if (!userData) throw new Error('User not found');
 
-  const currentResources = userData.resources || getDefaultResources();
+  const rawResources = userData.resources || {};
+  const currentResources = normalizeResources(rawResources);
   const increments = {};
+  const setFields = { ...extraSets };
+  const forceSetResourceTypes = new Set();
 
   for (const { resourceType, change, source } of updates) {
     validateResourceType(resourceType);
@@ -93,7 +101,7 @@ async function batchUpdateResources(openid, updates, extraSets = {}) {
     const config = RESOURCE_CONFIG[resourceType];
     const currentValue = currentResources[resourceType] ?? config.defaultValue;
     let actualChange = change;
-    const newValue = currentValue + actualChange;
+    let newValue = currentValue + actualChange;
 
     if (config.min !== null && newValue < config.min) {
       throw new AppError(
@@ -104,21 +112,44 @@ async function batchUpdateResources(openid, updates, extraSets = {}) {
     if (config.max !== null && newValue > config.max) {
       actualChange = config.max - currentValue;
       if (actualChange <= 0) {
+        if (!hasResourceField(rawResources, resourceType)) {
+          setFields[`resources.${resourceType}`] = currentValue;
+          forceSetResourceTypes.add(String(resourceType));
+        }
         logger.info(`[Resource] Batch: ${config.key} already at max(${config.max}), skip`, { openid });
         continue;
       }
+      newValue = currentValue + actualChange;
     }
 
-    increments[resourceType] = (increments[resourceType] || 0) + actualChange;
+    currentResources[resourceType] = newValue;
+
+    const resourceTypeKey = String(resourceType);
+    const resourceFieldPath = `resources.${resourceType}`;
+    const shouldForceSet = forceSetResourceTypes.has(resourceTypeKey) || !hasResourceField(rawResources, resourceType);
+    if (shouldForceSet) {
+      setFields[resourceFieldPath] = newValue;
+      forceSetResourceTypes.add(resourceTypeKey);
+    } else {
+      increments[resourceType] = (increments[resourceType] || 0) + actualChange;
+    }
+
     logger.info(`[Resource] Batch: ${actualChange > 0 ? '+' : ''}${actualChange} ${config.key} from ${source}`, { openid });
   }
 
-  if (Object.keys(increments).length === 0 && Object.keys(extraSets).length === 0) {
+  for (const [resourceType, value] of Object.entries(currentResources)) {
+    if (hasResourceField(rawResources, resourceType)) continue;
+    const resourceFieldPath = `resources.${resourceType}`;
+    if (setFields[resourceFieldPath] !== undefined) continue;
+    setFields[resourceFieldPath] = value;
+  }
+
+  if (Object.keys(increments).length === 0 && Object.keys(setFields).length === 0) {
     return currentResources;
   }
 
-  const updatedUser = await cloudbaseDB.batchUpdateAndIncrement(openid, extraSets, increments);
-  return updatedUser.resources || currentResources;
+  const updatedUser = await cloudbaseDB.batchUpdateAndIncrement(openid, setFields, increments);
+  return normalizeResources(updatedUser.resources);
 }
 
 // ==================== 内部工具方法 ====================
@@ -129,6 +160,11 @@ function validateResourceType(resourceType) {
   }
 }
 
+function hasResourceField(resources, resourceType) {
+  if (!resources || typeof resources !== 'object') return false;
+  return Object.prototype.hasOwnProperty.call(resources, String(resourceType));
+}
+
 function getDefaultResources() {
   const defaults = {};
   for (const [typeId, config] of Object.entries(RESOURCE_CONFIG)) {
@@ -137,11 +173,17 @@ function getDefaultResources() {
   return defaults;
 }
 
+function normalizeResources(resources = {}) {
+  const safeResources = resources && typeof resources === 'object' ? resources : {};
+  return { ...getDefaultResources(), ...safeResources };
+}
+
 module.exports = {
   getResources,
   getResource,
   updateResource,
   batchUpdateResources,
   getDefaultResources,
+  normalizeResources,
   RESOURCE_TYPE
 };

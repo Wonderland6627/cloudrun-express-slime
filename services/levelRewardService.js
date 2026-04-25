@@ -3,7 +3,7 @@ const { logger } = require('../utils/logger');
 const cloudbaseDB = require('../utils/cloudbaseDB');
 const resourceService = require('./resourceService');
 const configManager = require('../config/luban/configManager');
-const { RESOURCE_TYPE, RESOURCE_CONFIG, RESOURCE_SOURCE, ITEM_TYPE } = require('../config/constants');
+const { RESOURCE_TYPE, RESOURCE_SOURCE, ITEM_TYPE } = require('../config/constants');
 
 /**
  * 领取通关奖励（服务端统一结算）
@@ -38,22 +38,33 @@ async function claimLevelReward(openid, levelId, watchedAd) {
 
   const totalCoin = coinReward + firstClearCoin + adBonusCoin;
 
-  const currentResources = user.resources || resourceService.getDefaultResources();
-  const currentEnergy = currentResources[RESOURCE_TYPE.ENERGY] ?? RESOURCE_CONFIG[RESOURCE_TYPE.ENERGY].defaultValue;
-  const energyMax = gc.energy_max;
-  const clampedEnergyReturn = Math.min(energyReturn, energyMax - currentEnergy);
-  const finalEnergyReturn = Math.max(clampedEnergyReturn, 0);
+  const currentResources = resourceService.normalizeResources(user.resources);
+  const currentEnergy = currentResources[RESOURCE_TYPE.ENERGY] ?? 0;
 
   const sets = {};
   if (isFirstClear) sets.progressLevelID = levelId;
 
-  const resourceIncrements = {};
-  if (totalCoin > 0) resourceIncrements[RESOURCE_TYPE.COIN] = totalCoin;
-  if (finalEnergyReturn > 0) resourceIncrements[RESOURCE_TYPE.ENERGY] = finalEnergyReturn;
-
-  if (Object.keys(sets).length > 0 || Object.keys(resourceIncrements).length > 0) {
-    await cloudbaseDB.batchUpdateAndIncrement(openid, sets, resourceIncrements);
+  const resourceUpdates = [];
+  if (totalCoin > 0) {
+    resourceUpdates.push({
+      resourceType: RESOURCE_TYPE.COIN,
+      change: totalCoin,
+      source: RESOURCE_SOURCE.LEVEL_REWARD,
+    });
   }
+  if (energyReturn > 0) {
+    resourceUpdates.push({
+      resourceType: RESOURCE_TYPE.ENERGY,
+      change: energyReturn,
+      source: RESOURCE_SOURCE.LEVEL_REWARD,
+    });
+  }
+
+  const updatedResources = (Object.keys(sets).length > 0 || resourceUpdates.length > 0)
+    ? await resourceService.batchUpdateResources(openid, resourceUpdates, sets)
+    : currentResources;
+  const finalEnergy = updatedResources[RESOURCE_TYPE.ENERGY] ?? currentEnergy;
+  const finalEnergyReturn = Math.max(finalEnergy - currentEnergy, 0);
 
   const rewards = [];
   rewards.push({
