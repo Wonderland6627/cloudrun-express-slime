@@ -15,6 +15,11 @@ var minigameRouter = require('./routes/minigame');
 // 加载版本信息模块
 const { getVersionString } = require('./utils/version');
 
+// 安全中间件
+const helmet = require('helmet');
+const { botFilter } = require('./middlewares/botFilter');
+const { globalLimiter } = require('./middlewares/rateLimiter');
+
 var app = express();
 
 // 启动时输出版本信息（使用新的 logger）
@@ -32,6 +37,12 @@ if (configManager.loaded) {
   logger.warn('Luban config not loaded (data directory may be empty, run gen_code_bin_to_server first)');
 }
 // ==========================================
+
+// ============ 安全防护中间件（最高优先级）============
+app.use(botFilter);
+app.use(helmet({ contentSecurityPolicy: false }));
+app.use(globalLimiter);
+// ========================================
 
 // ============ 日志中间件配置 ============
 // 1. Morgan 基础日志（将输出流导向 winston）

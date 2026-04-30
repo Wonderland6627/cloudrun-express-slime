@@ -9,11 +9,11 @@
 ### 1. 调用版本信息接口
 
 ```bash
-curl https://express-slime-216111-7-1352845565.sh.run.tcloudbase.com/api/version
-curl https://express-slime-dev-216111-7-1352845565.sh.run.tcloudbase.com/api/version
+curl https://<your-cloudbase-domain>.sh.run.tcloudbase.com/api/version
+curl https://<your-cloudbase-dev-domain>.sh.run.tcloudbase.com/api/version
 
-curl https://piratecat.top/api/version
-curl https://piratecat.top/dev/api/version
+curl https://<your-custom-domain>/api/version
+curl https://<your-custom-domain>/dev/api/version
 ```
 
 ### 2. 返回示例

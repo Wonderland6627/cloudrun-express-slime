@@ -6,6 +6,7 @@ const router = express.Router();
 const { authMiddleware, optionalAuthMiddleware } = require('../middlewares/auth');
 const { validateCode } = require('../middlewares/validator');
 const { testModeMiddleware } = require('../middlewares/testMode');
+const { loginLimiter } = require('../middlewares/rateLimiter');
 
 // 控制器
 const minigameController = require('../controllers/minigameController');
@@ -19,6 +20,7 @@ const adsGiftPackController = require('../controllers/adsGiftPackController');
  * POST /api/minigame/getCode2Session
  */
 router.post('/getCode2Session', 
+  loginLimiter,
   validateCode,
   minigameController.getCode2Session
 );
