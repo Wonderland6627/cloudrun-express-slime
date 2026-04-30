@@ -66,9 +66,8 @@ function isMaliciousUA(ua) {
 
   const suspiciousPatterns = [
     'sqlmap', 'nikto', 'nmap', 'masscan', 'zgrab',
-    'gobuster', 'dirbuster', 'wpscan', 'joomla',
-    'python-requests', 'go-http-client', 'curl/',
-    'wget/', 'scrapy', 'httpclient',
+    'gobuster', 'dirbuster', 'wpscan', 'scrapy',
+    'zmeu', 'w3af', 'nessus', 'openvas',
   ];
   const lowerUA = ua.toLowerCase();
   return suspiciousPatterns.some(p => lowerUA.includes(p));

@@ -7,7 +7,7 @@ const globalLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { code: -1, msg: 'Too many requests, please try again later.' },
-  validate: { xForwardedForHeader: false },
+  validate: { xForwardedForHeader: false, forwardedHeader: false },
 });
 
 // 登录接口限制：每个 IP 每分钟最多 10 次
@@ -17,7 +17,7 @@ const loginLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { code: -1, msg: 'Too many login attempts, please try again later.' },
-  validate: { xForwardedForHeader: false },
+  validate: { xForwardedForHeader: false, forwardedHeader: false },
 });
 
 module.exports = { globalLimiter, loginLimiter };

@@ -22,6 +22,9 @@ const { globalLimiter } = require('./middlewares/rateLimiter');
 
 var app = express();
 
+// 信任反向代理（云托管环境），使 req.ip 获取真实客户端 IP
+app.set('trust proxy', true);
+
 // 启动时输出版本信息（使用新的 logger）
 logger.info('Server Starting', { version: getVersionString() });
 
