@@ -25,10 +25,14 @@ class AppError extends Error {
  * @param {Function} next - Express next函数
  */
 function errorHandler(err, req, res, next) {
+  const statusCode = Number(err.statusCode || err.status || 500);
+  const isProduction = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'release';
+
   // 使用 Winston 记录错误日志（包含完整的堆栈跟踪）
   logger.error('API Error', {
     message: err.message,
     stack: err.stack,
+    statusCode,
     url: req.url,
     method: req.method,
     ip: req.ip || req.connection.remoteAddress,
@@ -42,12 +46,12 @@ function errorHandler(err, req, res, next) {
   if (err.isCustom) {
     return error(res, err.message, err.code, err.statusCode);
   }
-  
-  // 默认错误处理
-  // 生产环境隐藏详细错误信息，其他环境显示详细错误信息
-  const isProduction = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'release';
-  const message = isProduction ? 'Internal server error' : err.message;
-  
+
+  if (statusCode >= 400 && statusCode < 500) {
+    return error(res, err.message || 'Bad request', RESPONSE_CODE.ERROR, statusCode);
+  }
+
+  const message = isProduction ? 'Internal server error' : (err.message || 'Internal server error');
   return error(res, message, RESPONSE_CODE.ERROR, 500);
 }
 
