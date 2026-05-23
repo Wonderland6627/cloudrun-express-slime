@@ -3,8 +3,18 @@ const jwt = require('jsonwebtoken');
 const { logger } = require('./logger');
 
 // Token配置
-const TOKEN_SECRET = process.env.TOKEN_SECRET || 'default-secret-key-change-in-production';
+const DEFAULT_TOKEN_SECRET = 'UEVXc5P9juJB4nzzoajjIYLio8AY36LFeS3gZIXD9bfr0lJW7QQzrGx3c1Xyj4nU';
+const TOKEN_SECRET = process.env.TOKEN_SECRET || DEFAULT_TOKEN_SECRET;
 const TOKEN_EXPIRE_TIME = '7d'; // 7天过期时间（JWT标准格式）
+const isProduction = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'release';
+
+if (isProduction && TOKEN_SECRET === DEFAULT_TOKEN_SECRET) {
+  throw new Error('TOKEN_SECRET is required in production environment');
+}
+
+if (!process.env.TOKEN_SECRET) {
+  logger.warn('TOKEN_SECRET is not set, using insecure default secret (non-production only)');
+}
 
 /**
  * 生成JWT Token

@@ -44,10 +44,9 @@ function errorHandler(err, req, res, next) {
   }
   
   // 默认错误处理
-  // release环境隐藏详细错误信息，develop环境显示详细错误信息
-  const message = process.env.NODE_ENV === 'release' 
-    ? 'Internal server error' 
-    : err.message;
+  // 生产环境隐藏详细错误信息，其他环境显示详细错误信息
+  const isProduction = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'release';
+  const message = isProduction ? 'Internal server error' : err.message;
   
   return error(res, message, RESPONSE_CODE.ERROR, 500);
 }
