@@ -1,5 +1,25 @@
-// 加载环境变量（如果存在.env文件）
-require('dotenv').config();
+// 加载环境变量（如果存在 .env 文件）
+function loadDotenvSafely() {
+  try {
+    require('dotenv').config();
+    return;
+  } catch (error) {
+    const isDotenvMissing =
+      error &&
+      error.code === 'MODULE_NOT_FOUND' &&
+      typeof error.message === 'string' &&
+      error.message.includes('dotenv');
+
+    if (!isDotenvMissing) {
+      throw error;
+    }
+
+    // 线上环境通常通过系统环境变量注入，dotenv 缺失时允许继续启动
+    console.warn('[bootstrap] dotenv not found, skip .env loading and continue with process env');
+  }
+}
+
+loadDotenvSafely();
 
 var createError = require('http-errors');
 var express = require('express');
