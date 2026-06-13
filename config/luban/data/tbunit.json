@@ -3,16 +3,45 @@
     "id": 1001,
     "name": "小水滴",
     "desc": "",
-    "unit_race": 1,
+    "unit_type": 1,
     "quality": 2,
+    "move_duration": 7.5,
     "img_path": "Assets/AssetRaw/UIRaw/Atlas/Unit/Unit_1001.png"
   },
   {
     "id": 1002,
     "name": "小火苗",
     "desc": "",
-    "unit_race": 2,
+    "unit_type": 2,
     "quality": 2,
+    "move_duration": 7.5,
     "img_path": "Assets/AssetRaw/UIRaw/Atlas/Unit/Unit_1002.png"
+  },
+  {
+    "id": 1003,
+    "name": "小嫩芽",
+    "desc": "",
+    "unit_type": 3,
+    "quality": 2,
+    "move_duration": 7.5,
+    "img_path": "Assets/AssetRaw/UIRaw/Atlas/Unit/Unit_1003.png"
+  },
+  {
+    "id": 1004,
+    "name": "小闪电",
+    "desc": "",
+    "unit_type": 4,
+    "quality": 2,
+    "move_duration": 7.5,
+    "img_path": "Assets/AssetRaw/UIRaw/Atlas/Unit/Unit_1004.png"
+  },
+  {
+    "id": 1005,
+    "name": "小花苞",
+    "desc": "",
+    "unit_type": 5,
+    "quality": 2,
+    "move_duration": 7.5,
+    "img_path": "Assets/AssetRaw/UIRaw/Atlas/Unit/Unit_1005.png"
   }
 ]

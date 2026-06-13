@@ -49,7 +49,7 @@ export const TestAccessFlag = Object.freeze({
     READ_WRITE: 3,
 });
 
-export const UnitEUnitRace = Object.freeze({
+export const UnitEUnitType = Object.freeze({
     /**
      * 蓝晶族
      */
@@ -58,6 +58,18 @@ export const UnitEUnitRace = Object.freeze({
      * 赤焰族
      */
     RED: 2,
+    /**
+     * 翠叶族
+     */
+    GREEN: 3,
+    /**
+     * 金雷族
+     */
+    YELLOW: 4,
+    /**
+     * 樱粉族
+     */
+    PINK: 5,
     /**
      * 黯渊族
      */
@@ -234,15 +246,18 @@ export class Unit {
         this.name = _json_.name;
         if (_json_.desc === undefined) { throw new Error() };
         this.desc = _json_.desc;
-        if (_json_.unit_race === undefined) { throw new Error() };
-        this.unitRace = _json_.unit_race;
+        if (_json_.unit_type === undefined) { throw new Error() };
+        this.unitType = _json_.unit_type;
         if (_json_.quality === undefined) { throw new Error() };
         this.quality = _json_.quality;
+        if (_json_.move_duration === undefined) { throw new Error() };
+        this.moveDuration = _json_.move_duration;
         if (_json_.img_path === undefined) { throw new Error() };
         this.imgPath = _json_.img_path;
     }
 
     resolve(tables) {
+        
         
         
         
