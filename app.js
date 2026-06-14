@@ -37,7 +37,7 @@ const { getVersionString } = require('./utils/version');
 
 // 安全中间件
 const helmet = require('helmet');
-const { botFilter } = require('./middlewares/botFilter');
+const { attachNormalizedPath, botFilter } = require('./middlewares/botFilter');
 const { globalLimiter } = require('./middlewares/rateLimiter');
 
 var app = express();
@@ -62,6 +62,7 @@ if (configManager.loaded) {
 // ==========================================
 
 // ============ 安全防护中间件（最高优先级）============
+app.use(attachNormalizedPath);
 app.use(botFilter);
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(globalLimiter);
@@ -70,7 +71,8 @@ app.use(globalLimiter);
 // ============ 日志中间件配置 ============
 // 1. Morgan 基础日志（将输出流导向 winston）
 app.use(morgan(':method :url :status :response-time ms - :res[content-length]', { 
-  stream: httpLogger.stream 
+  stream: httpLogger.stream,
+  skip: httpLogger.shouldSkipRequestLogging
 }));
 // ========================================
 

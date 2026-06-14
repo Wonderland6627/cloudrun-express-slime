@@ -21,6 +21,12 @@ const fs = require('fs');
 // 日志根目录（相对于工程根目录）
 // 使用 path.join(__dirname, '..') 获取工程根目录，确保在任何环境下都一致
 const LOG_ROOT_DIR = path.join(__dirname, '..', 'logs');
+const IS_PRODUCTION = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'release';
+const HTTP_DETAIL_MODE = process.env.HTTP_LOG_DETAIL_MODE || (IS_PRODUCTION ? 'errors' : 'detailed');
+const INCLUDE_HTTP_BODY = process.env.HTTP_LOG_INCLUDE_BODY === 'true' || (!IS_PRODUCTION && HTTP_DETAIL_MODE === 'detailed');
+const INCLUDE_HTTP_RESPONSE = process.env.HTTP_LOG_INCLUDE_RESPONSE === 'true' || (!IS_PRODUCTION && HTTP_DETAIL_MODE === 'detailed');
+const SKIPPED_HTTP_LOG_PATHS = new Set(['/health', '/api/version']);
+const REDACTED_KEYS = new Set(['authorization', 'token', 'access_token', 'refresh_token', 'secret', 'wx_secret']);
 
 // 确保日志目录存在
 if (!fs.existsSync(LOG_ROOT_DIR)) {
@@ -124,7 +130,7 @@ const consoleTransport = new winston.transports.Console({
  */
 const logger = winston.createLogger({
   // 默认记录 http 及以上级别
-  level: process.env.NODE_ENV === 'production' ? 'http' : 'debug',
+  level: IS_PRODUCTION ? 'http' : 'debug',
   // 传输方式：文件 + 控制台
   transports: [
     dailyRotateTransport,
@@ -163,6 +169,97 @@ function getClientIP(req) {
 }
 
 /**
+ * 获取请求路径，优先使用已标准化的路径
+ * @param {Object} req
+ * @returns {string}
+ */
+function getRequestPath(req) {
+  return req.normalizedPath || req.path || req.originalUrl || req.url || '/';
+}
+
+/**
+ * 判断当前请求是否应该跳过访问日志
+ * @param {Object} req
+ * @returns {boolean}
+ */
+function shouldSkipRequestLogging(req) {
+  return SKIPPED_HTTP_LOG_PATHS.has(getRequestPath(req));
+}
+
+/**
+ * 截断过长字符串，避免日志膨胀
+ * @param {string} value
+ * @param {number} maxLength
+ * @returns {string}
+ */
+function truncateString(value, maxLength = 200) {
+  if (typeof value !== 'string') return value;
+  if (value.length <= maxLength) return value;
+  return `${value.slice(0, maxLength)}...[truncated]`;
+}
+
+/**
+ * 对敏感字段做脱敏，并控制对象深度
+ * @param {*} value
+ * @param {number} depth
+ * @returns {*}
+ */
+function sanitizePayload(value, depth = 0) {
+  if (value == null) return value;
+  if (depth >= 2) return '[Truncated]';
+
+  if (typeof value === 'string') {
+    return truncateString(value, 160);
+  }
+
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return value.slice(0, 5).map(item => sanitizePayload(item, depth + 1));
+  }
+
+  if (typeof value === 'object') {
+    return Object.entries(value)
+      .slice(0, 10)
+      .reduce((result, [key, itemValue]) => {
+        const lowerKey = key.toLowerCase();
+        if (REDACTED_KEYS.has(lowerKey) || lowerKey.includes('token') || lowerKey.includes('secret')) {
+          result[key] = '[REDACTED]';
+          return result;
+        }
+
+        result[key] = sanitizePayload(itemValue, depth + 1);
+        return result;
+      }, {});
+  }
+
+  return String(value);
+}
+
+/**
+ * 摘要化响应体，避免记录完整业务数据
+ * @param {*} responseBody
+ * @returns {*}
+ */
+function summarizeResponseBody(responseBody) {
+  if (responseBody == null || typeof responseBody !== 'object') {
+    return sanitizePayload(responseBody);
+  }
+
+  const summary = {};
+  if (Object.prototype.hasOwnProperty.call(responseBody, 'code')) summary.code = responseBody.code;
+  if (Object.prototype.hasOwnProperty.call(responseBody, 'msg')) summary.msg = truncateString(responseBody.msg, 120);
+  if (Object.prototype.hasOwnProperty.call(responseBody, 'status')) summary.status = responseBody.status;
+  if (Object.prototype.hasOwnProperty.call(responseBody, 'data')) {
+    summary.data = sanitizePayload(responseBody.data, 1);
+  }
+
+  return Object.keys(summary).length > 0 ? summary : sanitizePayload(responseBody, 1);
+}
+
+/**
  * HTTP 请求日志记录器（与 morgan 集成）
  * 
  * 使用方式：在 app.js 中作为 morgan 的 stream 参数
@@ -176,61 +273,76 @@ const httpLogger = {
       logger.http(message.trim());
     }
   },
+  shouldSkipRequestLogging,
   
   /**
    * 详细记录 HTTP 请求和响应（自定义中间件使用）
-   * 
-   * 将请求和响应分开记录为两条日志：
-   * 1. 请求开始时记录请求信息
-   * 2. 响应结束时记录完整响应信息
-   * 
+   *
+   * - development/release-debug: 记录请求开始 + 响应摘要
+   * - production 默认仅记录 4xx/5xx 详情
+   *
    * 使用示例：
    * app.use(httpLogger.logRequestDetails);
-   * 
+   *
    * @param {Object} req - Express 请求对象
    * @param {Object} res - Express 响应对象
    * @param {Function} next - Express next 函数
    */
   logRequestDetails: (req, res, next) => {
-    // 记录请求开始时间
+    if (shouldSkipRequestLogging(req) || HTTP_DETAIL_MODE === 'off') {
+      return next();
+    }
+
     const startTime = Date.now();
-    
-    // 1️⃣ 立即记录请求日志（auth中间件尚未执行，openid可能不可用）
-    logger.http('HTTP Request', {
-      method: req.method,
-      url: req.originalUrl || req.url,
-      ip: getClientIP(req),
-      userAgent: req.get('user-agent'),
-      query: req.query,
-      body: req.body,
-      headers: {
-        'content-type': req.get('content-type'),
-        'authorization': req.get('authorization') ? '[PRESENT]' : undefined
-      }
-    });
-    
-    // 保存原始的 res.json 方法
+    let responseBody;
+    const shouldLogRequestStart = HTTP_DETAIL_MODE === 'detailed';
+    const shouldCaptureResponse = INCLUDE_HTTP_RESPONSE || HTTP_DETAIL_MODE === 'detailed';
     const originalJson = res.json.bind(res);
-    
-    // 重写 res.json 方法，拦截响应内容
+
     res.json = function(data) {
-      // 计算响应时间
-      const responseTime = Date.now() - startTime;
-      
-      // 2️⃣ 记录响应日志（auth中间件已执行，可获取openid）
-      logger.http('HTTP Response', {
-        method: req.method,
-        url: req.originalUrl || req.url,
-        status: res.statusCode,
-        responseTime: `${responseTime}ms`,
-        openid: req.user?.openid,
-        response: data
-      });
-      
-      // 调用原始方法
+      if (shouldCaptureResponse) {
+        responseBody = data;
+      }
       return originalJson(data);
     };
-    
+
+    if (shouldLogRequestStart) {
+      logger.http('HTTP Request', {
+        method: req.method,
+        url: req.originalUrl || req.url,
+        normalizedPath: getRequestPath(req),
+        ip: getClientIP(req),
+        userAgent: truncateString(req.get('user-agent') || '', 160),
+        query: sanitizePayload(req.query),
+        body: INCLUDE_HTTP_BODY ? sanitizePayload(req.body) : undefined,
+        headers: {
+          'content-type': req.get('content-type'),
+          'authorization': req.get('authorization') ? '[PRESENT]' : undefined
+        }
+      });
+    }
+
+    res.on('finish', () => {
+      const shouldLogResponse =
+        HTTP_DETAIL_MODE === 'detailed' ||
+        (HTTP_DETAIL_MODE === 'errors' && res.statusCode >= 400);
+
+      if (!shouldLogResponse) return;
+
+      logger.http('HTTP Detail', {
+        method: req.method,
+        url: req.originalUrl || req.url,
+        normalizedPath: getRequestPath(req),
+        status: res.statusCode,
+        responseTime: `${Date.now() - startTime}ms`,
+        ip: getClientIP(req),
+        openid: req.user?.openid,
+        userAgent: truncateString(req.get('user-agent') || '', 160),
+        body: INCLUDE_HTTP_BODY ? sanitizePayload(req.body) : undefined,
+        response: shouldCaptureResponse ? summarizeResponseBody(responseBody) : undefined
+      });
+    });
+
     next();
   }
 };

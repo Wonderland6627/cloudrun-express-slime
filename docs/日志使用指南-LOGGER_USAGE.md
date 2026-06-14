@@ -5,12 +5,12 @@
 本项目使用 **Winston** + **winston-daily-rotate-file** + **Morgan** 构建了一套专业的日志系统。
 
 ### 主要特性
-- ✅ 自动记录所有 HTTP 请求和响应详情
+- ✅ 自动记录 HTTP 摘要日志，错误请求补充详情日志
 - ✅ 支持业务日志记录（info、warn、error 等级别）
 - ✅ 每小时自动切分日志文件
 - ✅ 按日期组织日志目录（`/app/logs/YYYY-MM-DD/`）
 - ✅ 异步写入，不阻塞主业务
-- ✅ 自动压缩旧日志，节省磁盘空间
+- ✅ 支持按环境控制请求体/响应体记录
 - ✅ 全局异常捕获和记录
 
 ---
@@ -130,9 +130,10 @@ logger.debug('Damage calculation', {
 系统已在 `app.js` 中配置，**无需手动调用**，会自动记录。
 
 ### 日志格式：
-每个 HTTP 请求会生成 **2 条独立的日志**：
+- 生产环境默认：每个请求 1 条 Morgan 摘要，`4xx/5xx` 额外补 1 条 `HTTP Detail`
+- 非生产环境默认：保留请求开始 + 响应结束两条详细日志
 
-#### 1️⃣ HTTP Request（请求日志）
+#### 1️⃣ HTTP Request（详细模式）
 记录请求开始时的信息：
 - HTTP 方法（GET、POST 等）
 - 请求 URL（包含查询参数）
@@ -142,13 +143,13 @@ logger.debug('Damage calculation', {
 - 请求体（body）
 - 关键请求头（headers）
 
-#### 2️⃣ HTTP Response（响应日志）
+#### 2️⃣ HTTP Detail（响应日志）
 记录响应结束时的信息：
 - HTTP 方法
 - 请求 URL
 - 响应状态码
 - 响应时间
-- **完整的响应数据**（包含所有字段）
+- 默认只记录响应摘要；显式开启 `HTTP_LOG_INCLUDE_RESPONSE=true` 时才记录更多内容
 
 ### 日志示例：
 
@@ -167,10 +168,10 @@ logger.debug('Damage calculation', {
 ```
 
 ### 优势：
-- ✅ **请求和响应分离**：便于追踪请求流程
-- ✅ **完整响应数据**：不再是概要，而是完整的响应内容
-- ✅ **便于调试**：可以清楚看到请求参数和响应结果
-- ✅ **便于排查**：通过 URL 和时间戳关联请求和响应
+- ✅ **生产可控**：默认减少 2xx 详单，压低日志体积
+- ✅ **错误聚焦**：`4xx/5xx` 仍保留可排查信息
+- ✅ **便于调试**：开发环境仍可看到请求参数和响应摘要
+- ✅ **探活降噪**：`/health`、`/api/version` 默认跳过访问日志
 
 ---
 
@@ -288,6 +289,7 @@ class GameService {
 | `maxSize` | `20m` | 单文件最大 20MB |
 | `maxFiles` | `30d` | 保留 30 天 |
 | `zippedArchive` | `false` | 不压缩旧日志 |
+| `HTTP_LOG_DETAIL_MODE` | `errors`(prod) / `detailed`(dev) | 控制详细 HTTP 日志策略 |
 
 ---
 

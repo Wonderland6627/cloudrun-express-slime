@@ -35,6 +35,9 @@ TCB_ENV=your-env-id
 TOKEN_SECRET=your-strong-secret
 WX_APPID=your-wechat-appid
 WX_SECRET=your-wechat-secret
+BUILD_TIME=2026-06-14T16:00:00+08:00
+GIT_COMMIT_SHA=abc123def456
+HTTP_LOG_DETAIL_MODE=errors
 ```
 
 如未使用服务角色认证，还需配置：
@@ -42,6 +45,13 @@ WX_SECRET=your-wechat-secret
 ```bash
 TCB_SECRET_ID=your-secret-id
 TCB_SECRET_KEY=your-secret-key
+```
+
+可选日志开关：
+
+```bash
+HTTP_LOG_INCLUDE_BODY=false
+HTTP_LOG_INCLUDE_RESPONSE=false
 ```
 
 ---
@@ -61,6 +71,7 @@ TCB_SECRET_KEY=your-secret-key
 
 - 应用监听 `process.env.PORT`，Docker 默认 `PORT=80`
 - 健康检查接口：`GET /health`
+- `/health` 与 `/api/version` 默认跳过访问日志，避免探活刷屏
 - 若出现 Readiness/Liveness 失败，优先检查：
   1. 控制台端口配置
   2. 启动日志是否正常
@@ -76,6 +87,11 @@ curl https://your-domain/health
 
 # 版本检查
 curl https://your-domain/api/version
+
+# 扫描拦截验证
+curl -i https://your-domain//wp-includes/wlwmanifest.xml
+curl -i https://your-domain/.aws/credentials
+curl -i https://your-domain/config/aws.yml
 
 # 获取 token（生产需真实 wechat code）
 curl -X POST https://your-domain/api/minigame/getCode2Session \
@@ -101,6 +117,22 @@ curl -X POST https://your-domain/api/minigame/getCode2Session \
 
 - 生产默认关闭测试模式，`editor` 登录不可用
 - 仅开发环境启用 `ENABLE_TEST_MODE=true`
+
+### 4) 扫描流量仍然出现 500
+
+- 先调用正式服/测试服 `/api/version`，核对 `revision` 是否一致
+- 若应用日志中存在对应 `API Error`，优先检查最新镜像是否已包含 botFilter 与 errorHandler 改动
+- 若网关日志有 500 而应用日志没有对应堆栈，继续排查云托管/WAF 层配置差异
+
+---
+
+## 发布后检查清单
+
+1. 正式服与测试服 `/api/version` 的 `revision`、`environment`、`testMode` 符合预期
+2. `GET /health` 正常返回，且访问日志不再持续刷屏
+3. `//wp-includes/...`、`/.aws/credentials`、`/config/aws.yml` 返回 `403/404`
+4. 高频 `.env` 枚举在日志中表现为 `403/429`，不再出现同类 `500`
+5. 真实业务链路 `POST /api/time`、`POST /api/minigame/getCode2Session`、`POST /api/minigame/getUserGameInfoV2` 返回正常
 
 ---
 

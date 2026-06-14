@@ -1,3 +1,4 @@
+const path = require('path');
 const { logger } = require('../utils/logger');
 
 // 路径黑名单前缀 - 常见 CMS/漏洞扫描路径
@@ -25,12 +26,17 @@ const BLOCKED_PATH_PREFIXES = [
   '/phpinfo',
   '/shell',
   '/backup',
+  '/config',
   '/config.php',
   '/install.php',
   '/setup.php',
   '/db/',
   '/mysql',
   '/sql',
+  '/.aws',
+  '/.kube',
+  '/web/.env',
+  '/www/.env',
 ];
 
 // 路径黑名单精确匹配
@@ -52,7 +58,60 @@ const BLOCKED_EXTENSIONS = [
   '.sql',
   '.log',
   '.swp',
+  '.yml',
+  '.yaml',
 ];
+
+/**
+ * 提取原始路径（不带 query）
+ * @param {import('express').Request} req
+ * @returns {string}
+ */
+function extractRawPath(req) {
+  const rawUrl = req.originalUrl || req.url || req.path || '/';
+  const queryIndex = rawUrl.indexOf('?');
+  return queryIndex >= 0 ? rawUrl.slice(0, queryIndex) : rawUrl;
+}
+
+/**
+ * 安全 decode 路径，避免无效编码触发异常
+ * @param {string} urlPath
+ * @returns {string}
+ */
+function safeDecodePath(urlPath) {
+  try {
+    return decodeURIComponent(urlPath);
+  } catch (error) {
+    return urlPath;
+  }
+}
+
+/**
+ * 标准化请求路径，避免 //、\、../ 等形式绕过黑名单
+ * @param {string} urlPath
+ * @returns {string}
+ */
+function normalizeUrlPath(urlPath) {
+  if (!urlPath) return '/';
+
+  let normalized = safeDecodePath(String(urlPath)).replace(/\\/g, '/');
+  normalized = normalized.replace(/\/{2,}/g, '/');
+
+  if (!normalized.startsWith('/')) {
+    normalized = `/${normalized}`;
+  }
+
+  normalized = path.posix.normalize(normalized);
+  if (normalized === '.' || !normalized) {
+    return '/';
+  }
+
+  if (!normalized.startsWith('/')) {
+    normalized = `/${normalized}`;
+  }
+
+  return normalized;
+}
 
 /**
  * 判断 User-Agent 是否明显异常
@@ -79,7 +138,7 @@ function isMaliciousUA(ua) {
  * @returns {boolean}
  */
 function isBlockedPath(urlPath) {
-  const lower = urlPath.toLowerCase();
+  const lower = normalizeUrlPath(urlPath).toLowerCase();
 
   if (BLOCKED_PATHS_EXACT.includes(lower)) return true;
   if (BLOCKED_PATH_PREFIXES.some(prefix => lower.startsWith(prefix))) return true;
@@ -93,11 +152,40 @@ let lastLogTime = Date.now();
 const LOG_INTERVAL_MS = 60 * 1000;
 
 /**
+ * 预先挂载标准化路径，避免后续中间件看到不一致路径
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @param {import('express').NextFunction} next
+ */
+function attachNormalizedPath(req, res, next) {
+  const rawPath = extractRawPath(req);
+  req.rawPath = rawPath;
+  req.normalizedPath = normalizeUrlPath(rawPath);
+  next();
+}
+
+/**
+ * 判断当前请求是否大概率是扫描/探测流量
+ * @param {import('express').Request} req
+ * @returns {boolean}
+ */
+function isLikelyProbeRequest(req) {
+  const urlPath = req.normalizedPath || normalizeUrlPath(extractRawPath(req));
+  const rawPath = req.rawPath || extractRawPath(req);
+  const ua = req.get('user-agent') || '';
+
+  if (isBlockedPath(urlPath) || isMaliciousUA(ua)) return true;
+  if (!urlPath.startsWith('/api/') && rawPath.includes('//')) return true;
+
+  return false;
+}
+
+/**
  * 恶意请求快速过滤中间件
  * 放在所有中间件最前面，对明显的扫描请求直接返回，不消耗后续资源
  */
 function botFilter(req, res, next) {
-  const urlPath = req.path || req.url.split('?')[0];
+  const urlPath = req.normalizedPath || normalizeUrlPath(extractRawPath(req));
   const ua = req.get('user-agent') || '';
 
   const blocked = isBlockedPath(urlPath) || isMaliciousUA(ua);
@@ -111,6 +199,7 @@ function botFilter(req, res, next) {
     logger.warn('Bot filter summary', {
       blockedInLastMinute: blockedCount,
       lastBlockedPath: urlPath,
+      lastBlockedRawPath: req.rawPath || extractRawPath(req),
       lastBlockedUA: ua.substring(0, 100),
     });
     blockedCount = 0;
@@ -120,4 +209,10 @@ function botFilter(req, res, next) {
   res.status(403).end();
 }
 
-module.exports = { botFilter };
+module.exports = {
+  attachNormalizedPath,
+  botFilter,
+  isBlockedPath,
+  isLikelyProbeRequest,
+  normalizeUrlPath
+};

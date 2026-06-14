@@ -23,7 +23,12 @@ curl https://<your-custom-domain>/dev/api/version
   "code": 0,
   "data": {
     "version": "0.0.0",
-    "buildTime": "2024-01-15T10:30:45.123Z"
+    "buildTime": "2024-01-15T10:30:45.123Z",
+    "startedAt": "2024-01-15T10:32:10.456Z",
+    "revision": "abc123def456",
+    "environment": "production",
+    "testMode": false,
+    "instance": "slime-express-7f9c8"
   },
   "msg": "success"
 }
@@ -31,8 +36,12 @@ curl https://<your-custom-domain>/dev/api/version
 
 ### 3. 验证方法
 
-- **buildTime**：这是代码构建/部署的时间，每次部署都会更新
-- 对比部署时间：在云托管控制台查看部署完成时间，应该与 `buildTime` 一致（可能有几秒误差）
+- **version**：来自 `package.json`，用于确认功能版本
+- **buildTime**：优先来自部署时注入的 `BUILD_TIME`/镜像构建时间
+- **startedAt**：当前实例启动时间，可区分“同一镜像重新拉起”和“新镜像部署”
+- **revision**：建议映射 Git commit 或镜像 tag，用于确认正式服/测试服是否是同一份代码
+- **environment / testMode**：用于确认正式服没有误开测试模式
+- **instance**：用于确认是否存在多实例轮询到旧版本
 
 ## 🔍 方法二：查看服务启动日志
 
@@ -45,13 +54,14 @@ curl https://<your-custom-domain>/dev/api/version
 服务启动时，日志会输出：
 
 ```
-🚀 Server Starting - v0.0.0 (build: 2024-01-15T10:30:45.123Z)
+Server Starting {"version":"v0.0.0 (build: 2024-01-15T10:30:45.123Z, rev: abc123def456, env: production, instance: slime-express-7f9c8)"}
 ```
 
 ### 3. 验证方法
 
-- 查看最新的启动日志中的 `buildTime`
-- 对比部署完成时间，应该一致
+- 查看最新启动日志中的 `buildTime`、`revision`、`environment`
+- 对比正式服与测试服是否返回同一 `revision`
+- 若 `revision` 一致但 `instance` 不同，仅代表不同容器实例，不代表版本漂移
 
 ## 🔍 方法三：查看云托管控制台部署历史
 
